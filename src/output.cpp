@@ -26,10 +26,9 @@ void print_vec(std::vector<int> vec)
 // Prints out the entire collection of bitboards as one board
 void print_board(struct position pos)
 {
-    std::cout << "\n\n\n\n\n\n            \033[35m+---+---+---+---+---+---+---+---+\n";
+    std::cout << "\033[35m+---+---+---+---+---+---+---+---+\n";
     for(int i = 0; i < 8; ++i)
     {
-        std::cout << "            ";
         for(int j = 0; j < 8; ++j)
         {
             std::cout << "\033[35m| ";
@@ -60,9 +59,9 @@ void print_board(struct position pos)
             else
                 std::cout << "  ";
         }
-        std::cout << "\033[35m|\n            \033[35m+---+---+---+---+---+---+---+---+\n";
+        std::cout << "\033[35m|\n\033[35m+---+---+---+---+---+---+---+---+\n";
     }
-    std::cout << "\033[97m\n\n\n\n\n\n";
+    std::cout << "\033[97m\n";
 }
 } // namespace debug
 } // namespace NerdChess

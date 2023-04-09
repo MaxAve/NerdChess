@@ -30,6 +30,8 @@ bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_
 }
 
 // Returns a vector of the locations of all squares a piece at the specified location can move to
+// Note: since we can't store the type of each piece on a bitboard, you must specify which piece
+// type you are currently selecting.
 std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type)
 {
     std::vector<int> legal_moves; // Vector of legal moves
@@ -38,7 +40,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
         case PAWN_W: // White pawn
         if(is_empty(pos, piece_location - 8) && piece_location > 7)
             legal_moves.push_back(piece_location - 8); // 1 square forward
-        if(is_empty(pos, piece_location - 16) && piece_location <= 55 && piece_location >= 48)
+        if(is_empty(pos, piece_location - 16) && is_empty(pos, piece_location - 8) && piece_location <= 55 && piece_location >= 48)
             legal_moves.push_back(piece_location - 16); // 2 squares forward (if the pawn is still on it's starting square)
         if(piece_color_at(pos, piece_location - 9, BLACK) && piece_location % 8 != 0)
             legal_moves.push_back(piece_location - 9); // Piece capture (left)
@@ -49,12 +51,50 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
         case PAWN_B: // Black pawn
         if(is_empty(pos, piece_location + 8) && piece_location < 56)
             legal_moves.push_back(piece_location + 8); // 1 square forward
-        if(is_empty(pos, piece_location + 16) && piece_location <= 15 && piece_location >= 8)
+        if(is_empty(pos, piece_location + 16) && is_empty(pos, piece_location + 8) && piece_location <= 15 && piece_location >= 8)
             legal_moves.push_back(piece_location + 16); // 2 squares forward (if the pawn is still on it's starting square)
-        if(piece_color_at(pos, piece_location + 9, BLACK) && piece_location+1 % 8 != 0)
+        if(piece_color_at(pos, piece_location + 9, WHITE) && piece_location+1 % 8 != 0)
             legal_moves.push_back(piece_location + 9); // Piece capture (right)
-        if(piece_color_at(pos, piece_location + 7, BLACK) && piece_location % 8 != 0)
+        if(piece_color_at(pos, piece_location + 7, WHITE) && piece_location % 8 != 0)
             legal_moves.push_back(piece_location + 7); // Piece capture (left)
+        break;
+
+		case KNIGHT_W: // White knight
+        if((is_empty(pos, piece_location - 15) || piece_color_at(pos, piece_location - 15, BLACK)) && piece_location+1 % 8 != 0 && piece_location > 15)
+            legal_moves.push_back(piece_location - 15); // 2 up, 1 right
+		if((is_empty(pos, piece_location - 17) || piece_color_at(pos, piece_location - 17, BLACK)) && piece_location % 8 != 0 && piece_location > 15)
+            legal_moves.push_back(piece_location - 17); // 2 up, 1 left
+		if((is_empty(pos, piece_location - 6) || piece_color_at(pos, piece_location - 6, BLACK)) && piece_location+2 % 8 != 0 && piece_location+1 % 8 != 0 && piece_location > 7)
+            legal_moves.push_back(piece_location - 6); // 1 up, 2 right
+		if((is_empty(pos, piece_location - 10) || piece_color_at(pos, piece_location - 10, BLACK)) && piece_location % 8 != 0 && piece_location-1 % 8 != 0 && piece_location > 7)
+            legal_moves.push_back(piece_location - 10); // 1 up, 2 left
+		if((is_empty(pos, piece_location + 10) || piece_color_at(pos, piece_location + 10, BLACK)) && piece_location+2 % 8 != 0 && piece_location+1 % 8 != 0 && piece_location < 56)
+            legal_moves.push_back(piece_location + 10); // 1 down, 2 right
+		if((is_empty(pos, piece_location + 6) || piece_color_at(pos, piece_location + 6, BLACK)) && piece_location % 8 != 0 && piece_location-1 % 8 != 0 && piece_location < 56)
+            legal_moves.push_back(piece_location + 6); // 1 down, 2 left
+		if((is_empty(pos, piece_location + 17) || piece_color_at(pos, piece_location + 17, BLACK)) && piece_location+1 % 8 != 0 && piece_location < 48)
+            legal_moves.push_back(piece_location + 17); // 2 down, 1 right
+		if((is_empty(pos, piece_location + 15) || piece_color_at(pos, piece_location + 15, BLACK)) && piece_location % 8 != 0 && piece_location < 48)
+            legal_moves.push_back(piece_location + 15); // 2 down, 1 left
+		break;
+
+		case KNIGHT_B: // Black knight
+        if((is_empty(pos, piece_location - 15) || piece_color_at(pos, piece_location - 15, WHITE)) && piece_location+1 % 8 != 0 && piece_location > 15)
+            legal_moves.push_back(piece_location - 15); // 2 up, 1 right
+		if((is_empty(pos, piece_location - 17) || piece_color_at(pos, piece_location - 17, WHITE)) && piece_location % 8 != 0 && piece_location > 15)
+            legal_moves.push_back(piece_location - 17); // 2 up, 1 left
+		if((is_empty(pos, piece_location - 6) || piece_color_at(pos, piece_location - 6, WHITE)) && piece_location+2 % 8 != 0 && piece_location+1 % 8 != 0 && piece_location > 7)
+            legal_moves.push_back(piece_location - 6); // 1 up, 2 right
+		if((is_empty(pos, piece_location - 10) || piece_color_at(pos, piece_location - 10, WHITE)) && piece_location % 8 != 0 && piece_location-1 % 8 != 0 && piece_location > 7)
+            legal_moves.push_back(piece_location - 10); // 1 up, 2 left
+		if((is_empty(pos, piece_location + 10) || piece_color_at(pos, piece_location + 10, WHITE)) && piece_location+2 % 8 != 0 && piece_location+1 % 8 != 0 && piece_location < 56)
+            legal_moves.push_back(piece_location + 10); // 1 down, 2 right
+		if((is_empty(pos, piece_location + 6) || piece_color_at(pos, piece_location + 6, WHITE)) && piece_location % 8 != 0 && piece_location-1 % 8 != 0 && piece_location < 56)
+            legal_moves.push_back(piece_location + 6); // 1 down, 2 left
+		if((is_empty(pos, piece_location + 17) || piece_color_at(pos, piece_location + 17, WHITE)) && piece_location+1 % 8 != 0 && piece_location < 48)
+            legal_moves.push_back(piece_location + 17); // 2 down, 1 right
+		if((is_empty(pos, piece_location + 15) || piece_color_at(pos, piece_location + 15, WHITE)) && piece_location % 8 != 0 && piece_location < 48)
+            legal_moves.push_back(piece_location + 15); // 2 down, 1 left
         break;
     }
     return legal_moves;
