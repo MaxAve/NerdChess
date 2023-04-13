@@ -1,5 +1,5 @@
 /*
-Here, position refers to a combination of (14) bitboards which define a specific
+Here, position refers to a combination of (12) bitboards which define a specific
 chess piece layout. This file contains all necessary function for working with
 a position.
 */
@@ -12,19 +12,12 @@ using namespace NerdChess::bitb;
 
 // Piece types
 // Used by the get_moves() function
-#define PAWN_W 0
-#define KNIGHT_W 1
-#define BISHOP_W 2
-#define ROOK_W 3
-#define QUEEN_W 4
-#define KING_W 5
-
-#define PAWN_B 6
-#define KNIGHT_B 7
-#define BISHOP_B 8
-#define ROOK_B 9
-#define QUEEN_B 10
-#define KING_B 11
+#define PAWN 0
+#define KNIGHT 1
+#define BISHOP 2
+#define ROOK 3
+#define QUEEN 4
+#define KING 5
 
 // Piece colors
 #define WHITE 0
@@ -58,7 +51,9 @@ struct position
 
 bool is_empty(struct position pos, uint8_t square);
 bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_color);
-std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type);
+bitboard map_bitboard(std::vector<int> vec);
+bitboard get_control_map(struct position pos, bool piece_color);
+std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type, bool piece_color, bool control);
 void setup_position(struct position& pos);
 } // namespace board
 } // namespace NerdChess

@@ -1,16 +1,20 @@
 # NerdChess Engine
-NerdChess is a WIP (work in progress) chess engine created by myself for educational purposes. According to plan, this engine should apply\
-basic algorithms to create a sensible chess game, such as a MinMax algorithm, basic position evaluation, etc. Please note: this project\
+NerdChess is a WIP (work in progress) chess engine created by myself for educational purposes. According to plan, this engine should apply
+basic algorithms to create a sensible chess game, such as a MiniMax algorithm, basic position evaluation, etc. Please note: this project
 is currently a work-in-progress, and many features are still missing.
 ## Roadmap
 Here is what I plan on adding and what I am currently attempting to implement:
 1. Bitboard implementation - **DONE**
 2. Moving/capturing pieces - *WIP*
 3. Position evaluation
-4. MinMax algorithm
+4. MiniMax algorithm
 5. Necessary optimizations (optional)
 6. Create a chess.com account and test to see how much ELO the engine can get (it's not cheating if I say that the account belongs to the engine)
+7. Challenge my classmates for a game with the engine and let NerdChess humiliate them.
 ## Recent changes
-See what I changed recently:
-1. Added more helpful debug functions. (It was harder than it looks!)
-2. Programmed legal moves for knights.
+See what has changed since the last commit:
+1. Programmed legal moves for Bishops, THE ROOKS, and Queens.
+2. Slightly changed README
+3. The get_moves() function now takes the piece and color as seperate parameters (this actually shortened the code to half of what it was)
+4. Added control maps, which are basically just bitboards of all the locations which pieces of a specific color control, this will later be used
+to generate legal moves for kings and check for checks/checkmates.
