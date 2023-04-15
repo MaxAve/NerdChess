@@ -19,7 +19,6 @@ int main()
 
     struct NerdChess::board::position test_pos;
     NerdChess::board::setup_position(test_pos);
-    NerdChess::bitb::set_bit(test_pos.rook_w, 1, 32);
     NerdChess::bitb::print_bitboard(NerdChess::board::get_control_map(test_pos, WHITE));
     //NerdChess::debug::print_board(test_pos);
     //NerdChess::debug::print_vec(NerdChess::board::get_moves(test_pos, 35, QUEEN, WHITE));

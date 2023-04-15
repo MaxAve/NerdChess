@@ -13,8 +13,4 @@ Here is what I plan on adding and what I am currently attempting to implement:
 7. Challenge my classmates for a game with the engine and let NerdChess humiliate them.
 ## Recent changes
 See what has changed since the last commit:
-1. Programmed legal moves for Bishops, THE ROOKS, and Queens.
-2. Slightly changed README
-3. The get_moves() function now takes the piece and color as seperate parameters (this actually shortened the code to half of what it was)
-4. Added control maps, which are basically just bitboards of all the locations which pieces of a specific color control, this will later be used
-to generate legal moves for kings and check for checks/checkmates.
+1. Fixed control maps (protected pieces were excluded from the map)
