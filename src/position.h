@@ -32,21 +32,21 @@ namespace board
 // 7 bitboards = 1 team
 struct position
 {
-    // White pieces
-    bitboard pawn_w;
-    bitboard knight_w;
-    bitboard bishop_w;
-    bitboard rook_w;
-    bitboard queen_w;
-    bitboard king_w;
+	// White pieces
+	bitboard pawn_w;
+	bitboard knight_w;
+	bitboard bishop_w;
+	bitboard rook_w;
+	bitboard queen_w;
+	bitboard king_w;
 
-    // Black pieces
-    bitboard pawn_b;
-    bitboard knight_b;
-    bitboard bishop_b;
-    bitboard rook_b;
-    bitboard queen_b;
-    bitboard king_b;
+	// Black pieces
+	bitboard pawn_b;
+	bitboard knight_b;
+	bitboard bishop_b;
+	bitboard rook_b;
+	bitboard queen_b;
+	bitboard king_b;
 };
 
 bool is_empty(struct position pos, uint8_t square);

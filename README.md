@@ -13,4 +13,5 @@ Here is what I plan on adding and what I am currently attempting to implement:
 7. Challenge my classmates for a game with the engine and let NerdChess humiliate them.
 ## Recent changes
 See what has changed since the last commit:
-1. Fixed control maps (protected pieces were excluded from the map)
+1. Fixed black pawns moving in the same direction as white pawns.
+2. Programmed legal moves for kings.

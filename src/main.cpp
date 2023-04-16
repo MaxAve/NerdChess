@@ -15,13 +15,14 @@ Please note: when school starts again, I will not be able to update this as regu
 // Main function
 int main()
 {
-    system("cls"); // Clear output
+	system("cls"); // Clear output
 
-    struct NerdChess::board::position test_pos;
-    NerdChess::board::setup_position(test_pos);
-    NerdChess::bitb::print_bitboard(NerdChess::board::get_control_map(test_pos, WHITE));
-    //NerdChess::debug::print_board(test_pos);
-    //NerdChess::debug::print_vec(NerdChess::board::get_moves(test_pos, 35, QUEEN, WHITE));
+	struct NerdChess::board::position test_pos;
+	NerdChess::board::setup_position(test_pos);
+	NerdChess::bitb::set_bit(test_pos.king_b, 1, 37);
+	//NerdChess::bitb::print_bitboard(NerdChess::board::get_control_map(test_pos, BLACK));
+	NerdChess::debug::print_board(test_pos);
+	NerdChess::debug::print_vec(NerdChess::board::get_moves(test_pos, 37, KING, BLACK, false));
 
-    return 0;
+	return 0;
 }

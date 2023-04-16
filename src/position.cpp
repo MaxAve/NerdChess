@@ -18,7 +18,7 @@ namespace board
 // Returns true if the bit at position 'square' of EVERY bitboard is 0 (empty)
 bool is_empty(struct position pos, uint8_t square_location)
 {
-    return !(get_bit(pos.pawn_w, square_location) | get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_w, square_location) | get_bit(pos.king_b, square_location));
+    	return !(get_bit(pos.pawn_w, square_location) | get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_w, square_location) | get_bit(pos.king_b, square_location));
 }
 
 // Is quite similar to is_empty() but instead of returning whether a square
@@ -26,7 +26,7 @@ bool is_empty(struct position pos, uint8_t square_location)
 // color (white/black) is on the square.
 bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_color)
 {
-    return (piece_color == WHITE ? (get_bit(pos.pawn_w, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.king_w, square_location)) : (get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_b, square_location)));
+    	return (piece_color == WHITE ? (get_bit(pos.pawn_w, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.king_w, square_location)) : (get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_b, square_location)));
 }
 
 // Iterates through vec and sets the bits of the returned bitboard at the positions of vec[i] to 1
@@ -73,36 +73,59 @@ bitboard get_control_map(struct position pos, bool piece_color)
 // @param control > if true, will return all squares that a piece controls, instead of returning squares to which the piece can go to
 std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type, bool piece_color, bool control)
 {
-    std::vector<int> legal_moves; // Vector of legal moves
-	const uint8_t opposite_piece_color = !piece_color; // This is used to determine what types of pieces the selected piece is allowed to capture
-    switch(piece_type)
-    {
+	std::vector<int> legal_moves; // Vector of legal moves
+		const uint8_t opposite_piece_color = !piece_color; // This is used to determine what types of pieces the selected piece is allowed to capture
+	switch(piece_type)
+	{
 		// ======================================
 		//
 		//                 PAWN                  
 		//
 		// ======================================
-        case PAWN:
-		if(!control)
-		{
-			// TODO Currently only works for white, add code for black pawns
-			if(is_empty(pos, piece_location - 8) && piece_location > 7)
-				legal_moves.push_back(piece_location - 8); // 1 square forward
-			if(is_empty(pos, piece_location - 16) && is_empty(pos, piece_location - 8) && piece_location <= 55 && piece_location >= 48)
-				legal_moves.push_back(piece_location - 16); // 2 squares forward (if the pawn is still on it's starting square)
-			if(piece_color_at(pos, piece_location - 9, opposite_piece_color) && piece_location % 8 != 0)
-				legal_moves.push_back(piece_location - 9); // Piece capture (left)
-			if(piece_color_at(pos, piece_location - 7, opposite_piece_color) && (piece_location+1) % 8 != 0)
-				legal_moves.push_back(piece_location - 7); // Piece capture (right)
-		}
-		else
-		{
-			if(piece_location % 8 != 0)
-				legal_moves.push_back(piece_location - 9); // Piece capture (left)
-			if((piece_location+1) % 8 != 0)
-				legal_moves.push_back(piece_location - 7); // Piece capture (right)
-		}
-        break;
+		case PAWN:
+			if(!control)
+			{
+				if(!piece_color) // White pawns
+				{
+					if(is_empty(pos, piece_location - 8) && piece_location > 7)
+						legal_moves.push_back(piece_location - 8); // 1 square forward
+					if(is_empty(pos, piece_location - 16) && is_empty(pos, piece_location - 8) && piece_location <= 55 && piece_location >= 48)
+						legal_moves.push_back(piece_location - 16); // 2 squares forward (if the pawn is still on it's starting square)
+					if(piece_color_at(pos, piece_location - 9, opposite_piece_color) && piece_location % 8 != 0)
+						legal_moves.push_back(piece_location - 9); // Piece capture (left)
+					if(piece_color_at(pos, piece_location - 7, opposite_piece_color) && (piece_location+1) % 8 != 0)
+						legal_moves.push_back(piece_location - 7); // Piece capture (right)
+				}
+				else
+				{
+					if(is_empty(pos, piece_location + 8) && piece_location < 56)
+						legal_moves.push_back(piece_location + 8); // 1 square forward
+					if(is_empty(pos, piece_location + 16) && is_empty(pos, piece_location + 8) && piece_location <= 15 && piece_location >= 8)
+						legal_moves.push_back(piece_location + 16); // 2 squares forward (if the pawn is still on it's starting square)
+					if(piece_color_at(pos, piece_location + 7, opposite_piece_color) && piece_location % 8 != 0)
+						legal_moves.push_back(piece_location + 7); // Piece capture (left)
+					if(piece_color_at(pos, piece_location + 9, opposite_piece_color) && (piece_location+1) % 8 != 0)
+						legal_moves.push_back(piece_location + 9); // Piece capture (right)
+				}
+			}
+			else
+			{
+				if(!piece_color) // White pawns
+				{
+					if(piece_location % 8 != 0)
+						legal_moves.push_back(piece_location - 9); // Piece capture (left)
+					if((piece_location+1) % 8 != 0)
+						legal_moves.push_back(piece_location - 7); // Piece capture (right)
+				}
+				else // Black pawns
+				{
+					if(piece_location % 8 != 0)
+						legal_moves.push_back(piece_location + 7); // Piece capture (left)
+					if((piece_location+1) % 8 != 0)
+						legal_moves.push_back(piece_location + 9); // Piece capture (right)
+				}
+			}
+		break;
 
 		// ======================================
 		//
@@ -471,29 +494,30 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 		case KING:
 		if(!control)
 		{
-			// TODO program moves for king
+			// Control map for enemy pieces
+			// Used to map squares the king CANNOT move to
+			bitboard control_map = get_control_map(pos, opposite_piece_color);
+
+			// Loops in a way that creates a 3x3 area around the piece_location (ignores piece_locations itself since the king can't control it's own square)
+			for(int i = piece_location - 9; i < piece_location + 9; i += 8)
+				for(int j = 0; j < 3; ++j)
+					if(get_bit(control_map, i+j) == 0 && i+j != piece_location && i+j >= 0 && i+j < 64)
+						legal_moves.push_back(i+j);
 		}
 		else
-		{
-			if(piece_location > 7)
-				legal_moves.push_back(piece_location - 8); // Up
-			if(piece_location < 56)
-				legal_moves.push_back(piece_location + 8); // Down
-			if(piece_location % 8 != 0)
-				legal_moves.push_back(piece_location - 1); // Left
-			if((piece_location+1) % 8 != 0)
-				legal_moves.push_back(piece_location + 1); // Right
-			if(piece_location > 7 && (piece_location+1) % 8 != 0)
-				legal_moves.push_back(piece_location - 7); // North-east
-			if(piece_location < 56 && (piece_location+1) % 8 != 0)
-				legal_moves.push_back(piece_location + 9); // South-east
-			if(piece_location < 56 && piece_location % 8 != 0)
-				legal_moves.push_back(piece_location + 7); // South-west
-			if(piece_location > 7 && piece_location % 8 != 0)
-				legal_moves.push_back(piece_location - 9); // North-west
-		}
-    }
-    return legal_moves;
+			// Loops in a way that creates a 3x3 area around the piece_location (ignores piece_locations itself since the king can't control it's own square)
+			for(int i = piece_location - 9; i < piece_location + 9; i += 8)
+				for(int j = 0; j < 3; ++j)
+					if(i+j != piece_location && i+j >= 0 && i+j < 64)
+						legal_moves.push_back(i+j);
+		break;
+
+		// Default (invalid argument)
+		default:
+		std::cerr << "Invalid piece type \"" << piece_type << "\"";
+		break;
+	}
+	return legal_moves;
 }
 
 // Sets up pieces (e.g. pawns across the 2nd and 7th ranks, rooks in the corners, etc.)
