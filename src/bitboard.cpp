@@ -15,7 +15,7 @@ namespace NerdChess
 namespace bitb
 {
 // Returns the bit value (1 or 0) at the specified position in a bitboard
-int get_bit(bitboard bb, int pos) { return (bb >> pos) & 1ULL; }
+inline bool get_bit(bitboard bb, int pos) { return (bb >> pos) & 1ULL; }
 
 // Sets a bit at the specified position in a referenced bitboard
 void set_bit(bitboard& bb, bool bitval, int pos) { bb |= 1ULL << pos; }

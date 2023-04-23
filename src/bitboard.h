@@ -20,7 +20,7 @@ namespace bitb
 typedef uint64_t bitboard;
 
 // Function declarations (definitions and explanations located in bitboard.cpp)
-int get_bit(bitboard bb, int pos);
+bool get_bit(bitboard bb, int pos);
 void set_bit(bitboard& bb, bool bitval, int pos);
 void print_bitboard(bitboard bb);
 } // namespace bitb

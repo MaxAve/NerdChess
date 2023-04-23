@@ -1,7 +1,7 @@
 /*
 Here, position refers to a combination of (12) bitboards which define a specific
 chess piece layout. This file contains all necessary function for working with
-a position.
+a position, such as retrieving piece types from squares and working with them.
 */
 
 #include <iostream>
@@ -15,23 +15,60 @@ namespace NerdChess
 {
 namespace board
 {
-// Returns true if the bit at position 'square' of EVERY bitboard is 0 (empty)
+/**
+ * @brief Returns true if the square at position square_location is empty
+ * @param pos position (board state)
+ * @param square_location the location on the board at which to check for pieces
+ */
 bool is_empty(struct position pos, uint8_t square_location)
 {
-    	return !(get_bit(pos.pawn_w, square_location) | get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_w, square_location) | get_bit(pos.king_b, square_location));
+    return !(get_bit(pos.pawn_w, square_location) | get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_w, square_location) | get_bit(pos.king_b, square_location));
 }
 
-// Is quite similar to is_empty() but instead of returning whether a square
-// is empty or not, piece_color_at() returns whether a piece of a specific
-// color (white/black) is on the square.
+/**
+ * @brief 
+ * Is quite similar to is_empty() but instead of returning whether a square
+ * is empty or not, piece_color_at() returns whether a piece of a specific
+ * color (white/black) is on the square.
+ * @param pos position (board state)
+ * @param square_location the location on the board at which to check
+ * @param piece_color piece color to check for
+ */
 bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_color)
 {
-    	return (piece_color == WHITE ? (get_bit(pos.pawn_w, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.king_w, square_location)) : (get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_b, square_location)));
+    return (piece_color == WHITE ? (get_bit(pos.pawn_w, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.king_w, square_location)) : (get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_b, square_location)));
 }
 
-// Iterates through vec and sets the bits of the returned bitboard at the positions of vec[i] to 1
-// e.g.: if vec is {0, 3, 17, 62}, then the returned bitboard will have values 1 at the bits 0, 3, 17, and 62.
-// The returned bitboard should look like 1001000000000000010...010
+/**
+ * @brief Returns the piece type at the selected square. Use macros declared in position.h (PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING)
+ * 
+ * @param pos 
+ * @param square_location 
+ */
+uint8_t get_piece_type(struct position pos, uint8_t square_location)
+{
+	if(get_bit(pos.pawn_w, square_location) || get_bit(pos.pawn_b, square_location))
+		return PAWN;
+	else if(get_bit(pos.knight_w, square_location) || get_bit(pos.knight_b, square_location))
+		return KNIGHT;
+	else if(get_bit(pos.bishop_w, square_location) || get_bit(pos.bishop_b, square_location))
+		return BISHOP;
+	else if(get_bit(pos.rook_w, square_location) || get_bit(pos.rook_b, square_location))
+		return ROOK;
+	else if(get_bit(pos.queen_w, square_location) || get_bit(pos.queen_b, square_location))
+		return QUEEN;
+	else if(get_bit(pos.king_w, square_location) || get_bit(pos.king_b, square_location))
+		return KING;
+	return EMPTY;
+}
+
+/**
+ * @brief 
+ * Iterates through vec and sets the bits of the returned bitboard at the positions of vec[i] to 1
+ * e.g.: if vec is {0, 3, 17, 62}, then the returned bitboard will have values 1 at the bits 0, 3, 17, and 62.
+ * The returned bitboard should look like 1001000000000000010...010
+ * @param vec vector of locations at which to set bits to 1
+ */
 bitboard map_bitboard(std::vector<int> vec)
 {
 	bitboard bb = 0ULL;
@@ -40,41 +77,50 @@ bitboard map_bitboard(std::vector<int> vec)
 	return bb;
 }
 
-// Returns a bitboard of all squares at which ALL pieces of a specific color can capture on
-// This can be useful for figuring out whether a king is allowed to move to a specific square
+/**
+ * @brief
+ * Returns a bitboard of all squares at which ALL pieces of a specific color control.
+ * This can be useful for figuring out whether a king is allowed to move to a specific square.
+ * @param pos position (board state)
+ * @param piece_color
+ * @return unsigned long long (bitboard)
+*/
 bitboard get_control_map(struct position pos, bool piece_color)
 {
 	bitboard map = 0ULL;
 	for(int i = 0; i < 64; ++i)
 	{
-		if(get_bit((piece_color ? pos.pawn_b : pos.pawn_w), i) == 1)
+		if(get_bit((piece_color ? pos.pawn_b : pos.pawn_w), i))
 			map = map | map_bitboard(get_moves(pos, i, PAWN, piece_color, true));
-		else if(get_bit((piece_color ? pos.knight_b : pos.knight_w), i) == 1)
+		else if(get_bit((piece_color ? pos.knight_b : pos.knight_w), i))
 			map = map | map_bitboard(get_moves(pos, i, KNIGHT, piece_color, true));
-		else if(get_bit((piece_color ? pos.bishop_b : pos.bishop_w), i) == 1)
+		else if(get_bit((piece_color ? pos.bishop_b : pos.bishop_w), i))
 			map = map | map_bitboard(get_moves(pos, i, BISHOP, piece_color, true));
-		else if(get_bit((piece_color ? pos.rook_b : pos.rook_w), i) == 1)
+		else if(get_bit((piece_color ? pos.rook_b : pos.rook_w), i))
 			map = map | map_bitboard(get_moves(pos, i, ROOK, piece_color, true));
-		else if(get_bit((piece_color ? pos.queen_b : pos.queen_w), i) == 1)
+		else if(get_bit((piece_color ? pos.queen_b : pos.queen_w), i))
 			map = map | map_bitboard(get_moves(pos, i, QUEEN, piece_color, true));
-		else if(get_bit((piece_color ? pos.king_b : pos.king_w), i) == 1)
+		else if(get_bit((piece_color ? pos.king_b : pos.king_w), i))
 			map = map | map_bitboard(get_moves(pos, i, KING, piece_color, true));
 	}
 	return map;
 }
 
-// Returns a vector of the locations of all squares a piece at the specified location can move to.
-// Note: since we can't store the type of each piece on a bitboard, you must specify which piece
-// type you are currently selecting. This function is used by the engine to predict possible moves.
-// @param pos > the position struct
-// @param piece_location > where the piece is located on the bitboard (0-63)
-// @param piece_type > tells the function which characteristics the selected piece has (PAWN, KNIGHT, BISHOP, ROOK, QUEEN)
-// @param piece_color > tells the function which piece color you are currently checking for
-// @param control > if true, will return all squares that a piece controls, instead of returning squares to which the piece can go to
+/**
+ @brief
+ * Returns a vector of the locations of all squares a piece at the specified location can move to.
+ * Note: since we can't store the type of each piece on a bitboard, you must specify which piece
+ * type you are currently selecting. This function is used by the engine to predict possible moves.
+ * @param pos position (board state)
+ * @param piece_location where the piece is located on the bitboard (0-63)
+ * @param piece_type tells the function which characteristics the selected piece has (PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING)
+ * @param piece_color tells the function which piece color you are currently checking for
+ * @param control if true, will return all squares that a piece controls, if false, returns squares to which the piece is allowed to move to
+*/
 std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type, bool piece_color, bool control)
 {
 	std::vector<int> legal_moves; // Vector of legal moves
-		const uint8_t opposite_piece_color = !piece_color; // This is used to determine what types of pieces the selected piece is allowed to capture
+	const uint8_t opposite_piece_color = !piece_color; // This is used to determine what types of pieces the selected piece is allowed to capture
 	switch(piece_type)
 	{
 		// ======================================
@@ -520,7 +566,10 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 	return legal_moves;
 }
 
-// Sets up pieces (e.g. pawns across the 2nd and 7th ranks, rooks in the corners, etc.)
+/**
+ * @brief Set the up position struct (puts pieces on their according squares)
+ * @param pos 
+ */
 void setup_position(struct position& pos)
 {
 	// Clear each bitboard (since they are not initialized during definition, they are all randomized)
