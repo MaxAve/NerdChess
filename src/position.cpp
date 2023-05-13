@@ -7,7 +7,6 @@ a position, such as retrieving piece types from squares and working with them.
 #include <iostream>
 #include <vector>
 #include "position.h"
-#include "bitboard.h"
 
 using namespace NerdChess::bitb;
 
@@ -15,6 +14,9 @@ namespace NerdChess
 {
 namespace board
 {
+int en_pessant_squares_w = -1;
+int en_pessant_squares_b = -1;
+
 /**
  * @brief Returns true if the square at position square_location is empty
  * @param pos position (board state)
@@ -63,6 +65,86 @@ uint8_t get_piece_type(struct position pos, uint8_t square_location)
 }
 
 /**
+ * @brief Removes a piece from the board
+ * 
+ * @param pos 
+ * @param location 
+ */
+void remove_piece(struct position& pos, int location)
+{
+	clear_bit(pos.pawn_w, location);
+	clear_bit(pos.pawn_b, location);
+	clear_bit(pos.knight_w, location);
+	clear_bit(pos.knight_b, location);
+	clear_bit(pos.bishop_w, location);
+	clear_bit(pos.bishop_b, location);
+	clear_bit(pos.rook_w, location);
+	clear_bit(pos.rook_b, location);
+	clear_bit(pos.queen_w, location);
+	clear_bit(pos.queen_b, location);
+	clear_bit(pos.king_w, location);
+	clear_bit(pos.king_b, location);
+}
+
+/**
+ * @brief Moves a piece from location to new_location
+ * 
+ * @param pos 
+ * @param new_location 
+ */
+void move_piece(struct position& pos, int location, int new_location)
+{
+	uint8_t piece_type = get_piece_type(pos, location);
+	bool piece_color = piece_color_at(pos, location, BLACK);
+
+	// Reset en pessant rule
+	en_pessant_squares_w = -1;
+	en_pessant_squares_b = -1;
+
+	remove_piece(pos, new_location); // Capture any pieces previously located at new_location
+
+	switch(piece_type)
+	{
+		case PAWN:
+		if(!piece_color)
+		{
+			// White pawn
+			move_bit(pos.pawn_w, location, new_location);
+			if((location - new_location) == 16)
+				en_pessant_squares_b = new_location + 8;
+		}
+		else
+		{
+			// Black pawn
+			move_bit(pos.pawn_b, location, new_location);
+			if((new_location - location) == 16)
+				en_pessant_squares_w = new_location - 8;
+		}
+		break;
+
+		case KNIGHT:
+		move_bit((piece_color ? pos.knight_b : pos.knight_w), location, new_location);
+		break;
+
+		case BISHOP:
+		move_bit((piece_color ? pos.bishop_b : pos.bishop_w), location, new_location);
+		break;
+
+		case ROOK:
+		move_bit((piece_color ? pos.rook_b : pos.rook_w), location, new_location);
+		break;
+
+		case QUEEN:
+		move_bit((piece_color ? pos.queen_b : pos.queen_w), location, new_location);
+		break;
+
+		case KING:
+		move_bit((piece_color ? pos.king_b : pos.king_w), location, new_location);
+		break;
+	}
+}
+
+/**
  * @brief 
  * Iterates through vec and sets the bits of the returned bitboard at the positions of vec[i] to 1
  * e.g.: if vec is {0, 3, 17, 62}, then the returned bitboard will have values 1 at the bits 0, 3, 17, and 62.
@@ -73,7 +155,7 @@ bitboard map_bitboard(std::vector<int> vec)
 {
 	bitboard bb = 0ULL;
 	for(int i = 0; i < vec.size(); ++i)
-		set_bit(bb, 1, vec[i]);
+		set_bit(bb, vec[i]);
 	return bb;
 }
 
@@ -107,6 +189,22 @@ bitboard get_control_map(struct position pos, bool piece_color)
 }
 
 /**
+ * @brief Returns the number of pieces on the board
+ * 
+ * @param pos 
+ * @return Number of pieces 
+ */
+int count_pieces(struct position pos)
+{
+	bitboard pos_map = pos.pawn_w | pos.pawn_b | pos.knight_w | pos.knight_b | pos.bishop_w | pos.bishop_b | pos.rook_w | pos.rook_b | pos.queen_w | pos.queen_b | pos.king_w | pos.king_b;
+	uint8_t num_pieces = 0;
+	for(int i = 0; i < 64; ++i)
+		if(get_bit(pos_map, i) == 1)
+			num_pieces++;
+	return num_pieces;
+}
+
+/**
  @brief
  * Returns a vector of the locations of all squares a piece at the specified location can move to.
  * Note: since we can't store the type of each piece on a bitboard, you must specify which piece
@@ -133,6 +231,8 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			{
 				if(!piece_color) // White pawns
 				{
+					if(en_pessant_squares_w >= 0 && ((piece_location - 9) == en_pessant_squares_w || (piece_location - 7) == en_pessant_squares_w))
+						legal_moves.push_back(en_pessant_squares_w); // En pessant
 					if(is_empty(pos, piece_location - 8) && piece_location > 7)
 						legal_moves.push_back(piece_location - 8); // 1 square forward
 					if(is_empty(pos, piece_location - 16) && is_empty(pos, piece_location - 8) && piece_location <= 55 && piece_location >= 48)
@@ -144,6 +244,8 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				}
 				else
 				{
+					if(en_pessant_squares_b >= 0 && ((piece_location + 9) == en_pessant_squares_b || (piece_location + 7) == en_pessant_squares_b))
+						legal_moves.push_back(en_pessant_squares_b); // En pessant
 					if(is_empty(pos, piece_location + 8) && piece_location < 56)
 						legal_moves.push_back(piece_location + 8); // 1 square forward
 					if(is_empty(pos, piece_location + 16) && is_empty(pos, piece_location + 8) && piece_location <= 15 && piece_location >= 8)
@@ -275,7 +377,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				{
 					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i < 8 || (i+1) % 8 == 0)
+					if(!is_empty(pos, i) || i < 8 || i % 8 == 0)
 						break;
 					i += 7;
 				}
@@ -327,7 +429,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				while(1)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i < 8 || (i+1) % 8 == 0)
+					if(!is_empty(pos, i) || i < 8 || i % 8 == 0)
 						break;
 					i += 7;
 				}
@@ -567,6 +669,30 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 }
 
 /**
+ * @brief Initializes an empty position
+ * 
+ * @return struct position 
+ */
+struct position empty_position()
+{
+	struct position epos;
+	epos.pawn_w = 0ULL;
+	epos.pawn_b = 0ULL;
+	epos.knight_w = 0ULL;
+	epos.knight_b = 0ULL;
+	epos.bishop_w = 0ULL;
+	epos.bishop_b = 0ULL;
+	epos.rook_w = 0ULL;
+	epos.rook_b = 0ULL;
+	epos.queen_w = 0ULL;
+	epos.queen_b = 0ULL;
+	epos.bishop_b = 0ULL;
+	epos.king_w = 0ULL;
+	epos.king_b = 0ULL;
+	return epos;
+}
+
+/**
  * @brief Set the up position struct (puts pieces on their according squares)
  * @param pos 
  */
@@ -589,41 +715,118 @@ void setup_position(struct position& pos)
 	// Pawns
 	for(int i = 0; i < 8; ++i)
 	{
-		set_bit(pos.pawn_w, 1, i + 48); // Black pawns
-		set_bit(pos.pawn_b, 1, i + 8); // Black pawns
+		set_bit(pos.pawn_w, i + 48); // Black pawns
+		set_bit(pos.pawn_b, i + 8); // Black pawns
 	}
 
 	// Knights
 	// White knights
-	set_bit(pos.knight_w, 1, 62);
-	set_bit(pos.knight_w, 1, 57);
+	set_bit(pos.knight_w, 62);
+	set_bit(pos.knight_w, 57);
 	// Black knights
-	set_bit(pos.knight_b, 1, 6);
-	set_bit(pos.knight_b, 1, 1);
+	set_bit(pos.knight_b, 6);
+	set_bit(pos.knight_b, 1);
 
 	// Bishops
 	// White bishops
-	set_bit(pos.bishop_w, 1, 61);
-	set_bit(pos.bishop_w, 1, 58);
+	set_bit(pos.bishop_w, 61);
+	set_bit(pos.bishop_w, 58);
 	// Black bishops
-	set_bit(pos.bishop_b, 1, 5);
-	set_bit(pos.bishop_b, 1, 2);
+	set_bit(pos.bishop_b, 5);
+	set_bit(pos.bishop_b, 2);
 
 	// THE ROOK
 	// White rook
-	set_bit(pos.rook_w, 1, 63);
-	set_bit(pos.rook_w, 1, 56);
+	set_bit(pos.rook_w, 63);
+	set_bit(pos.rook_w, 56);
 	// Black rook
-	set_bit(pos.rook_b, 1, 7);
-	set_bit(pos.rook_b, 1, 0);
+	set_bit(pos.rook_b, 7);
+	set_bit(pos.rook_b, 0);
 
 	// Queen
-	set_bit(pos.queen_w, 1, 59); // White queen
-	set_bit(pos.queen_b, 1, 3); // Black queen
+	set_bit(pos.queen_w, 59); // White queen
+	set_bit(pos.queen_b, 3); // Black queen
 
 	// King
-	set_bit(pos.king_w, 1, 60); // White king
-	set_bit(pos.king_b, 1, 4); // Black king
+	set_bit(pos.king_w, 60); // White king
+	set_bit(pos.king_b, 4); // Black king
 }
+
+/**
+ * @brief Returns the location of a piece on a bitboard. Returns -1 if piece was not found. This function is specifically optimized to work for single pieces, will return last occurence if multiple pieces are pesent on the bitboard.
+ * 
+ * @param bb 
+ * @return int 
+ */
+int find_piece(bitboard bb)
+{
+	bitboard b = bb;
+	for(int i = 0; i < 64; ++i)
+	{
+		if(b == 1ULL) return i+1;
+		b = b >> 1;
+	}
+	return -1;
+}
+
+namespace debug
+{
+// Prints out a vector with a JavaScript-like format.
+// Example output:
+// [1, 143, 92]
+void print_vec(std::vector<int> vec)
+{
+	if(vec.size() >= 1)
+	{
+		std::cout << "[";
+		for(int i = 0; i < vec.size()-1; ++i)
+			std::cout << vec[i] << ", ";
+		std::cout << vec[vec.size()-1] << "]\n";
+	}
+	else
+		std::cout << "[]\n";
+}
+
+// Prints out the entire collection of bitboards as one board
+void print_board(struct position pos)
+{
+	std::cout << "\033[35m+---+---+---+---+---+---+---+---+\n";
+	for(int i = 0; i < 8; ++i)
+	{
+		for(int j = 0; j < 8; ++j)
+		{
+		std::cout << "\033[35m| ";
+		if(bitb::get_bit(pos.pawn_w, j + i*8) == 1)
+			std::cout << "\033[97mp ";
+		else if(bitb::get_bit(pos.pawn_b, j + i*8) == 1)
+			std::cout << "\033[90mp ";
+		else if(bitb::get_bit(pos.knight_w, j + i*8) == 1)
+			std::cout << "\033[97mN ";
+		else if(bitb::get_bit(pos.knight_b, j + i*8) == 1)
+			std::cout << "\033[90mN ";
+		else if(bitb::get_bit(pos.bishop_w, j + i*8) == 1)
+			std::cout << "\033[97mB ";
+		else if(bitb::get_bit(pos.bishop_b, j + i*8) == 1)
+			std::cout << "\033[90mB ";
+		else if(bitb::get_bit(pos.rook_w, j + i*8) == 1)
+			std::cout << "\033[97mR ";
+		else if(bitb::get_bit(pos.rook_b, j + i*8) == 1)
+			std::cout << "\033[90mR ";
+		else if(bitb::get_bit(pos.queen_w, j + i*8) == 1)
+			std::cout << "\033[97mQ ";
+		else if(bitb::get_bit(pos.queen_b, j + i*8) == 1)
+			std::cout << "\033[90mQ ";
+		else if(bitb::get_bit(pos.king_w, j + i*8) == 1)
+			std::cout << "\033[97mK ";
+		else if(bitb::get_bit(pos.king_b, j + i*8) == 1)
+			std::cout << "\033[90mK ";
+		else
+			std::cout << "  ";
+		}
+		std::cout << "\033[35m|\n\033[35m+---+---+---+---+---+---+---+---+\n";
+	}
+	std::cout << "\033[97m\n";
+}
+} // namespace debug
 } // namespace board
 } // namespace NerdChess

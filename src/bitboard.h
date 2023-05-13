@@ -19,9 +19,14 @@ namespace bitb
 // to believe that the bitboard is actually 32 bits in total.
 typedef uint64_t bitboard;
 
-// Function declarations (definitions and explanations located in bitboard.cpp)
 bool get_bit(bitboard bb, int pos);
-void set_bit(bitboard& bb, bool bitval, int pos);
+
+void set_bit(bitboard& bb, int pos);
+
+void clear_bit(bitboard& bb, int pos);
+
+void move_bit(bitboard& bb, int from, int to);
+
 void print_bitboard(bitboard bb);
 } // namespace bitb
 } // namespace NerdChess

@@ -1,7 +1,7 @@
 /*
 Here, position refers to a combination of (12) bitboards which define a specific
 chess piece layout. This file contains all necessary function for working with
-a position.
+a position, such as retrieving piece types from squares and working with them.
 */
 
 #include <iostream>
@@ -28,6 +28,9 @@ namespace NerdChess
 {
 namespace board
 {
+extern int en_pessant_squares_w; // En pessant square for white pawns (white captures)
+extern int en_pessant_squares_b; // En pessant square for black pawns (black captures)
+
 // A position is a struct containing 14 bitboards
 // 1 bitboard = 1 piece type
 // 7 bitboards = 1 team
@@ -53,9 +56,20 @@ struct position
 bool is_empty(struct position pos, uint8_t square);
 bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_color);
 uint8_t get_piece_type(struct position pos, uint8_t square_location);
+void remove_piece(struct position& pos, int location);
+void move_piece(struct position& pos, int location, int new_location);
 bitboard map_bitboard(std::vector<int> vec);
 bitboard get_control_map(struct position pos, bool piece_color);
+int count_pieces(struct position pos);
 std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type, bool piece_color, bool control);
 void setup_position(struct position& pos);
+struct position empty_position();
+int find_piece(bitboard bb);
+
+namespace debug
+{
+void print_vec(std::vector<int> vec);
+void print_board(struct position pos);
+} // namespace debug
 } // namespace board
 } // namespace NerdChess
