@@ -55,11 +55,13 @@ struct position
 
 bool is_empty(struct position pos, uint8_t square);
 bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_color);
-uint8_t get_piece_type(struct position pos, uint8_t square_location);
+int get_piece_type(struct position pos, uint8_t square_location);
 void remove_piece(struct position& pos, int location);
 void move_piece(struct position& pos, int location, int new_location);
 bitboard map_bitboard(std::vector<int> vec);
 bitboard get_control_map(struct position pos, bool piece_color);
+bitboard map_pieces(struct position pos);
+int count_bits(bitboard bb);
 int count_pieces(struct position pos);
 std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type, bool piece_color, bool control);
 void setup_position(struct position& pos);

@@ -47,7 +47,7 @@ bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_
  * @param pos 
  * @param square_location 
  */
-uint8_t get_piece_type(struct position pos, uint8_t square_location)
+int get_piece_type(struct position pos, uint8_t square_location)
 {
 	if(get_bit(pos.pawn_w, square_location) || get_bit(pos.pawn_b, square_location))
 		return PAWN;
@@ -189,6 +189,32 @@ bitboard get_control_map(struct position pos, bool piece_color)
 }
 
 /**
+ * @brief Maps all pieces in a position on a bitboard
+ * 
+ * @param pos 
+ * @return bitboard 
+ */
+bitboard map_pieces(struct position pos)
+{
+    return pos.pawn_w | pos.pawn_b | pos.knight_w | pos.knight_b | pos.bishop_w | pos.bishop_b | pos.rook_w | pos.rook_b | pos.queen_w | pos.queen_b | pos.king_w | pos.king_b;
+}
+
+/**
+ * @brief Returns the number of positive bits in a bitboard (ones)
+ * 
+ * @param bb 
+ * @return Number of bits set to "1"
+ */
+int count_bits(bitboard bb)
+{
+	uint8_t num_pieces = 0;
+	for(int i = 0; i < 64; ++i)
+		if(get_bit(bb, i) == 1)
+			num_pieces++;
+	return num_pieces;
+}
+
+/**
  * @brief Returns the number of pieces on the board
  * 
  * @param pos 
@@ -219,6 +245,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 {
 	std::vector<int> legal_moves; // Vector of legal moves
 	const uint8_t opposite_piece_color = !piece_color; // This is used to determine what types of pieces the selected piece is allowed to capture
+	bitboard piece_map = map_pieces(pos); // Squares on which there are pieces
 	switch(piece_type)
 	{
 		// ======================================
@@ -233,22 +260,22 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				{
 					if(en_pessant_squares_w >= 0 && ((piece_location - 9) == en_pessant_squares_w || (piece_location - 7) == en_pessant_squares_w))
 						legal_moves.push_back(en_pessant_squares_w); // En pessant
-					if(is_empty(pos, piece_location - 8) && piece_location > 7)
+					if(!get_bit(piece_map, piece_location - 8) && piece_location > 7)
 						legal_moves.push_back(piece_location - 8); // 1 square forward
-					if(is_empty(pos, piece_location - 16) && is_empty(pos, piece_location - 8) && piece_location <= 55 && piece_location >= 48)
+					if(!get_bit(piece_map, piece_location - 16) && !get_bit(piece_map, piece_location - 8) && piece_location <= 55 && piece_location >= 48)
 						legal_moves.push_back(piece_location - 16); // 2 squares forward (if the pawn is still on it's starting square)
 					if(piece_color_at(pos, piece_location - 9, opposite_piece_color) && piece_location % 8 != 0)
 						legal_moves.push_back(piece_location - 9); // Piece capture (left)
 					if(piece_color_at(pos, piece_location - 7, opposite_piece_color) && (piece_location+1) % 8 != 0)
 						legal_moves.push_back(piece_location - 7); // Piece capture (right)
 				}
-				else
+				else // Black pawns
 				{
 					if(en_pessant_squares_b >= 0 && ((piece_location + 9) == en_pessant_squares_b || (piece_location + 7) == en_pessant_squares_b))
 						legal_moves.push_back(en_pessant_squares_b); // En pessant
-					if(is_empty(pos, piece_location + 8) && piece_location < 56)
+					if(get_bit(piece_map, piece_location + 8) == 0 && piece_location < 56)
 						legal_moves.push_back(piece_location + 8); // 1 square forward
-					if(is_empty(pos, piece_location + 16) && is_empty(pos, piece_location + 8) && piece_location <= 15 && piece_location >= 8)
+					if(get_bit(piece_map, piece_location + 16) == 0 && get_bit(piece_map, piece_location + 8) == 0 && piece_location <= 15 && piece_location >= 8)
 						legal_moves.push_back(piece_location + 16); // 2 squares forward (if the pawn is still on it's starting square)
 					if(piece_color_at(pos, piece_location + 7, opposite_piece_color) && piece_location % 8 != 0)
 						legal_moves.push_back(piece_location + 7); // Piece capture (left)
@@ -283,21 +310,21 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 		case KNIGHT:
 		if(!control)
 		{
-			if((is_empty(pos, piece_location - 15) || piece_color_at(pos, piece_location - 15, opposite_piece_color)) && (piece_location+1) % 8 != 0 && piece_location > 15)
+			if((!get_bit(piece_map, piece_location - 15) || piece_color_at(pos, piece_location - 15, opposite_piece_color)) && (piece_location+1) % 8 != 0 && piece_location > 15)
 				legal_moves.push_back(piece_location - 15); // 2 up, 1 right
-			if((is_empty(pos, piece_location - 17) || piece_color_at(pos, piece_location - 17, opposite_piece_color)) && piece_location % 8 != 0 && piece_location > 15)
+			if((!get_bit(piece_map, piece_location - 17) || piece_color_at(pos, piece_location - 17, opposite_piece_color)) && piece_location % 8 != 0 && piece_location > 15)
 				legal_moves.push_back(piece_location - 17); // 2 up, 1 left
-			if((is_empty(pos, piece_location - 6) || piece_color_at(pos, piece_location - 6, opposite_piece_color)) && (piece_location+2) % 8 != 0 && (piece_location+1) % 8 != 0 && piece_location > 7)
+			if((!get_bit(piece_map, piece_location - 6) || piece_color_at(pos, piece_location - 6, opposite_piece_color)) && (piece_location+2) % 8 != 0 && (piece_location+1) % 8 != 0 && piece_location > 7)
 				legal_moves.push_back(piece_location - 6); // 1 up, 2 right
-			if((is_empty(pos, piece_location - 10) || piece_color_at(pos, piece_location - 10, opposite_piece_color)) && piece_location % 8 != 0 && (piece_location-1) % 8 != 0 && piece_location > 7)
+			if((!get_bit(piece_map, piece_location - 10) || piece_color_at(pos, piece_location - 10, opposite_piece_color)) && piece_location % 8 != 0 && (piece_location-1) % 8 != 0 && piece_location > 7)
 				legal_moves.push_back(piece_location - 10); // 1 up, 2 left
-			if((is_empty(pos, piece_location + 10) || piece_color_at(pos, piece_location + 10, opposite_piece_color)) && (piece_location+2) % 8 != 0 && (piece_location+1) % 8 != 0 && piece_location < 56)
+			if((!get_bit(piece_map, piece_location + 10) || piece_color_at(pos, piece_location + 10, opposite_piece_color)) && (piece_location+2) % 8 != 0 && (piece_location+1) % 8 != 0 && piece_location < 56)
 				legal_moves.push_back(piece_location + 10); // 1 down, 2 right
-			if((is_empty(pos, piece_location + 6) || piece_color_at(pos, piece_location + 6, opposite_piece_color)) && (piece_location % 8) != 0 && (piece_location-1) % 8 != 0 && piece_location < 56)
+			if((!get_bit(piece_map, piece_location + 6) || piece_color_at(pos, piece_location + 6, opposite_piece_color)) && (piece_location % 8) != 0 && (piece_location-1) % 8 != 0 && piece_location < 56)
 				legal_moves.push_back(piece_location + 6); // 1 down, 2 left
-			if((is_empty(pos, piece_location + 17) || piece_color_at(pos, piece_location + 17, opposite_piece_color)) && (piece_location+1) % 8 != 0 && piece_location < 48)
+			if((!get_bit(piece_map, piece_location + 17) || piece_color_at(pos, piece_location + 17, opposite_piece_color)) && (piece_location+1) % 8 != 0 && piece_location < 48)
 				legal_moves.push_back(piece_location + 17); // 2 down, 1 right
-			if((is_empty(pos, piece_location + 15) || piece_color_at(pos, piece_location + 15, opposite_piece_color)) && (piece_location % 8) != 0 && piece_location < 48)
+			if((!get_bit(piece_map, piece_location + 15) || piece_color_at(pos, piece_location + 15, opposite_piece_color)) && (piece_location % 8) != 0 && piece_location < 48)
 				legal_moves.push_back(piece_location + 15); // 2 down, 1 left
 		}
 		else
@@ -335,9 +362,9 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				int i = piece_location - 9;
 				while(1)
 				{
-					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i < 8 || i % 8 == 0)
+					if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
 						break;
 					i -= 9;
 				}
@@ -348,9 +375,9 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				int i = piece_location + 9;
 				while(1)
 				{
-					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i >= 56 || (i+1) % 8 == 0)
+					if(get_bit(piece_map, i) || i >= 56 || (i+1) % 8 == 0)
 						break;
 					i += 9;
 				}
@@ -361,9 +388,9 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				int i = piece_location - 7;
 				while(1)
 				{
-					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i < 8 || (i+1) % 8 == 0)
+					if(get_bit(piece_map, i) || i < 8 || (i+1) % 8 == 0)
 						break;
 					i -= 7;
 				}
@@ -375,9 +402,9 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				int i = piece_location + 7;
 				while(1)
 				{
-					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i < 8 || i % 8 == 0)
+					if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
 						break;
 					i += 7;
 				}
@@ -392,7 +419,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				while(1)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i < 8 || i % 8 == 0)
+					if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
 						break;
 					i -= 9;
 				}
@@ -404,7 +431,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				while(1)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i >= 56 || (i+1) % 8 == 0)
+					if(get_bit(piece_map, i) || i >= 56 || (i+1) % 8 == 0)
 						break;
 					i += 9;
 				}
@@ -416,7 +443,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				while(1)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i < 8 || (i+1) % 8 == 0)
+					if(get_bit(piece_map, i) || i < 8 || (i+1) % 8 == 0)
 						break;
 					i -= 7;
 				}
@@ -429,7 +456,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				while(1)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i < 8 || i % 8 == 0)
+					if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
 						break;
 					i += 7;
 				}
@@ -439,7 +466,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 
 		// ======================================
 		//
-		//                THE ROOK                  
+		//                THE ROOK!                  
 		//
 		// ======================================
 		case ROOK:
@@ -448,11 +475,11 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			// Up
 			if(piece_location > 7)
 			{
-				for(int i = piece_location - 8; i > 7; i -= 8)
+				for(int i = piece_location - 8; i > -1; i -= 8)
 				{
-					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i))
+					if(get_bit(piece_map, i))
 						break;
 				}
 			}
@@ -461,9 +488,9 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			{
 				for(int i = piece_location + 8; i < 56; i += 8)
 				{
-					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i))
+					if(get_bit(piece_map, i))
 						break;
 				}
 			}
@@ -472,9 +499,9 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			{
 				for(int i = piece_location - 1; i > -1; --i)
 				{
-					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i % 8 == 0)
+					if(get_bit(piece_map, i) || i % 8 == 0)
 						break;
 				}
 			}
@@ -483,9 +510,9 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			{
 				for(int i = piece_location + 1; i < 63; ++i)
 				{
-					if(is_empty(pos, i) || piece_color_at(pos, i, opposite_piece_color))
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(!is_empty(pos, i) || (i+1) % 8 == 0)
+					if(get_bit(piece_map, i) || (i+1) % 8 == 0)
 						break;
 				}
 			}
@@ -495,10 +522,10 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			// Up
 			if(piece_location > 7)
 			{
-				for(int i = piece_location - 8; i > 7; i -= 8)
+				for(int i = piece_location - 8; i > -1; i -= 8)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i))
+					if(get_bit(piece_map, i))
 						break;
 				}
 			}
@@ -508,7 +535,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				for(int i = piece_location + 8; i < 56; i += 8)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i))
+					if(get_bit(piece_map, i))
 						break;
 				}
 			}
@@ -518,7 +545,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				for(int i = piece_location - 1; i > -1; --i)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i) || i % 8 == 0)
+					if(get_bit(piece_map, i) || i % 8 == 0)
 						break;
 				}
 			}
@@ -528,7 +555,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				for(int i = piece_location + 1; i < 63; ++i)
 				{
 					legal_moves.push_back(i);
-					if(!is_empty(pos, i) || (i+1) % 8 == 0)
+					if(get_bit(piece_map, i) || (i+1) % 8 == 0)
 						break;
 				}
 			}
@@ -549,7 +576,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			while(1)
 			{
 				legal_moves.push_back(i);
-				if(!is_empty(pos, i) || i < 8 || i % 8 == 0)
+				if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
 					break;
 				i -= 9;
 			}
@@ -561,7 +588,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			while(1)
 			{
 				legal_moves.push_back(i);
-				if(!is_empty(pos, i) || i >= 56 || (i+1) % 8 == 0)
+				if(get_bit(piece_map, i) || i >= 56 || (i+1) % 8 == 0)
 					break;
 				i += 9;
 			}
@@ -573,7 +600,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			while(1)
 			{
 				legal_moves.push_back(i);
-				if(!is_empty(pos, i) || i < 8 || (i+1) % 8 == 0)
+				if(get_bit(piece_map, i) || i < 8 || (i+1) % 8 == 0)
 					break;
 				i -= 7;
 			}
@@ -586,7 +613,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			while(1)
 			{
 				legal_moves.push_back(i);
-				if(!is_empty(pos, i) || i < 8 || (i+1) % 8 == 0)
+				if(get_bit(piece_map, i) || i < 8 || (i+1) % 8 == 0)
 					break;
 				i += 7;
 			}
@@ -598,7 +625,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			for(int i = piece_location - 8; i > 7; i -= 8)
 			{
 				legal_moves.push_back(i);
-				if(!is_empty(pos, i))
+				if(get_bit(piece_map, i))
 					break;
 			}
 		}
@@ -608,7 +635,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			for(int i = piece_location + 8; i < 56; i += 8)
 			{
 				legal_moves.push_back(i);
-				if(!is_empty(pos, i))
+				if(get_bit(piece_map, i))
 					break;
 			}
 		}
@@ -618,7 +645,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			for(int i = piece_location - 1; i > -1; --i)
 			{
 				legal_moves.push_back(i);
-				if(!is_empty(pos, i) || i % 8 == 0)
+				if(get_bit(piece_map, i) || i % 8 == 0)
 					break;
 			}
 		}
@@ -628,7 +655,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			for(int i = piece_location + 1; i < 63; ++i)
 			{
 				legal_moves.push_back(i);
-				if(!is_empty(pos, i) || (i+1) % 8 == 0)
+				if(get_bit(piece_map, i) || (i+1) % 8 == 0)
 					break;
 			}
 		}
@@ -769,6 +796,7 @@ int find_piece(bitboard bb)
 	return -1;
 }
 
+// Debugging
 namespace debug
 {
 // Prints out a vector with a JavaScript-like format.

@@ -19,14 +19,42 @@ namespace bitb
 // to believe that the bitboard is actually 32 bits in total.
 typedef uint64_t bitboard;
 
-bool get_bit(bitboard bb, int pos);
+/**
+ * @brief Get the bit at location pos
+ * 
+ * @param bb bitboard
+ * @param pos bit location
+ * @return true 
+ * @return false 
+ */
+inline bool get_bit(bitboard bb, int pos)
+{
+    return (bb >> pos) & 1ULL;
+}
 
-void set_bit(bitboard& bb, int pos);
+/**
+ * @brief Set a single bit at position pos in the bitboard to 1
+ * 
+ * @param bb bitboard reference
+ * @param pos bit position to set
+ */
+inline void set_bit(bitboard& bb, int pos)
+{
+    bb |= (1ULL << pos);
+}
 
-void clear_bit(bitboard& bb, int pos);
+/**
+ * @brief Set a single bit at position pos in the bitboard to 0
+ * 
+ * @param bb bitboard reference
+ * @param pos bit position to set
+ */
+inline void clear_bit(bitboard& bb, int pos)
+{
+    bb &= ~(1ULL << pos);
+}
 
 void move_bit(bitboard& bb, int from, int to);
-
 void print_bitboard(bitboard bb);
 } // namespace bitb
 } // namespace NerdChess

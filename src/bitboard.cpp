@@ -15,20 +15,6 @@ namespace NerdChess
 namespace bitb
 {
 /**
- * @brief Get the bit at location pos
- * 
- * @param bb bitboard
- * @param pos bit location
- * @return true 
- * @return false 
- */
-inline bool get_bit(bitboard bb, int pos) { return (bb >> pos) & 1ULL; }
-
-void set_bit(bitboard& bb, int pos) { bb |= (1ULL << pos); }
-
-void clear_bit(bitboard& bb, int pos) { bb &= ~(1ULL << pos); }
-
-/**
  * @brief Moves the positive value of a bit to a new location. E.g: move_bit(0001, 3, 0) -> 1000
  * 
  * @param bb 
