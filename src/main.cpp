@@ -40,28 +40,43 @@ int main()
 
 	NerdChess::board::setup_position(test_pos);
 
+	//NerdChess::board::move_piece(test_pos, 52, 36);
+	//NerdChess::board::move_piece(test_pos, 12, 28);
+	//NerdChess::board::move_piece(test_pos, 62, 45);
+	//NerdChess::board::move_piece(test_pos, 1, 18);
+
+	system("cls");
+
+	/*NerdChess::bitb::set_bit(test_pos.queen_w, 40);
+	for(int i = 0; i < NerdChess::board::get_moves(test_pos, 40, QUEEN, WHITE, false).size(); ++i)
+	{
+		if(NerdChess::board::get_moves(test_pos, 40, QUEEN, WHITE, false)[i] == 54)
+		{
+			std::cout << "fuck u\n";
+		}
+	}
+	NerdChess::board::debug::print_vec(NerdChess::board::get_moves(test_pos, 40, QUEEN, WHITE, false));
+	NerdChess::board::debug::print_board(test_pos);*/
+
 	while(1)
 	{
-		auto start = std::chrono::high_resolution_clock::now();
-
-		struct NerdChess::engine::engine_eval eval = NerdChess::engine::minimax(test_pos, true, -INT_MAX, INT_MAX, 4);
-		NerdChess::board::move_piece(test_pos, eval.best_move[0], eval.best_move[1]);
-
-		auto stop = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-		std::cout << "Position evaluation took up " << (double)(duration.count()) / 1000000 << " seconds\n";
+		struct NerdChess::engine::engine_eval eval1 = NerdChess::engine::minimax(test_pos, true, -INT_MAX, INT_MAX, 4);
+		NerdChess::board::move_piece(test_pos, eval1.best_move[0], eval1.best_move[1]);
 
 		system("cls");
 		NerdChess::board::debug::print_board(test_pos);
 
-		int from;
+		struct NerdChess::engine::engine_eval eval2 = NerdChess::engine::minimax(test_pos, false, -INT_MAX, INT_MAX, 4);
+		NerdChess::board::move_piece(test_pos, eval2.best_move[0], eval2.best_move[1]);
+
+		/*int from;
 		int to;
 		std::cout << "\nFrom: ";
 		std::cin >> from;
-		std::cout << "\nTo: ";
+		std::cout << "To: ";
 		std::cin >> to;
 
-		NerdChess::board::move_piece(test_pos, from, to);
+		NerdChess::board::move_piece(test_pos, from, to);*/
 
 		system("cls");
 		NerdChess::board::debug::print_board(test_pos);
@@ -93,14 +108,14 @@ int main()
 			std::cout << std::to_string(NerdChess::square_safety_map_w[i*8 + j]) << " ";
 		}
 		std::cout << "\n";
-	}
+	}*/
 
-	std::cout << "\n\n\n";
+	/*std::cout << "\n\n\n";
 	for(int i = 0; i < 8; ++i)
 	{
 		for(int j = 0; j < 8; ++j)
 		{
-			std::cout << std::to_string(NerdChess::board_control_value_map_b[i*8 + j]) << " ";
+			std::cout << std::to_string(NerdChess::board_control_value_map_w[i*8 + j]) << " ";
 		}
 		std::cout << "\n";
 	}*/

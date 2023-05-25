@@ -35,6 +35,8 @@ extern int square_safety_map_b[64];
 // Map for square colors (used for evaluating bishops)
 extern bitboard board_color_map;
 
+extern bool is_endgame;
+
 void generate_board_control_value_map(int* buf, bool piece_color);
 void generate_square_safety_map(int* buf, bool piece_color);
 bitboard generate_board_color_map();

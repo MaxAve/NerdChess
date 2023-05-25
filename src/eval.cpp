@@ -23,6 +23,8 @@ int square_safety_map_b[64] = {0};
 
 bitboard board_color_map = 0ULL;
 
+bool is_endgame = false;
+
 /**
  * @brief Generates a map on which each square has a specific value. This can be used to determine whether a piece controls useful squares. "Good squares" include squares on the enemy side and center squares.
  * 
@@ -55,12 +57,12 @@ void generate_square_safety_map(int* buf, bool piece_color)
         // For white pieces
         for(int i = 0; i < 8; ++i)
             for(int j = 0; j < 8; ++j)
-                buf[i*8+j] = (int)pow(sqrt(8-i)*2 + (sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2) - 300;
+                buf[i*8+j] = (int)pow(sqrt(8-i)*2 + (sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2);
     else
         // For black pieces
         for(int i = 0; i < 8; ++i)
             for(int j = 0; j < 8; ++j)
-                buf[63 - (i*8+j)] = (int)pow(sqrt(8-i)*2 + (sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2) - 300;
+                buf[63 - (i*8+j)] = (int)pow(sqrt(8-i)*2 + (sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2);
 }
 
 /**
@@ -81,11 +83,11 @@ bitboard generate_board_color_map()
 namespace eval
 {
 /**
- * @brief Checks the entire board and assings a value for each piece found based on their usefulness and overall strength. This function works equally well for both middle- and endgame phases. The final result is the sum of each piece's value.
+ * @brief Evaluates material
  * 
- * @param pos position to analyse
- * @param piece_color color for which to check
- * @return int
+ * @param pos 
+ * @param piece_color 
+ * @return int 
  */
 int eval_material(struct board::position pos, bool piece_color)
 {
@@ -97,149 +99,72 @@ int eval_material(struct board::position pos, bool piece_color)
 
     for(int i = 0; i < 64; ++i)
     {
-        if(get_bit(piece_map, i))
+        if(bitb::get_bit(piece_map, i))
         {
             if(board::piece_color_at(pos, i, piece_color))
             {
                 switch(board::get_piece_type(pos, i))
                 {
                     // Pawn
-                    // Pawns are only worth 100 points (1), they gain value when they are passed pawns and lose
-                    // value if they are doubled or tripled.
                     case PAWN:
                     {
-                        evaluation += PAWN_VALUE; // Pawns are worth 100 points
-
-                        // Black and white pawns behave differently, which is why we need seperate functions for them
-                        if(!piece_color)
+                        evaluation += PAWN_VALUE;
+                        // Distance to promotion square
+                        if(!piece_color) // White
                         {
-                            // White
-                            if(bitb::get_bit(pos.pawn_w, i-8)) // Doubled pawns
-                            {
-                                evaluation -= 35; // Doubled pawns are bad...
-                                if(i >= 16 && bitb::get_bit(pos.pawn_w, i-16))
-                                    evaluation -= 100; // ...but tripled pawns are even worse.
-                            }
-                            else
-                            {
-                                // Check if there aren't any pieces in front of this one
-                                // If there are none, then increase this pawn's value based on the number of squares
-                                // left to promotion
-                                bool passed = true;
-                                uint8_t squares_to_promotion = 0;
-                                for(int j = i - 8; j > -1; j -= 8)
-                                {
-                                    squares_to_promotion++;
-                                    if(get_bit(piece_map, j))
-                                    {
-                                        passed = false;
-                                        break;
-                                    }
-                                }
-                                if(passed)
-                                    evaluation += (6 - squares_to_promotion)*15; // Increase the pawn's value if it is an unobstructed passed pawn
-                            }
-                            // Pawn chains are pretty cool I guess
-                            if(i % 8 != 0)
-                                if(get_bit(pos.pawn_w, i + 7))
-                                    evaluation += 20;
-                            if((i+1) % 8 != 0)
-                                if(get_bit(pos.pawn_w, i + 9))
-                                    evaluation += 20;
+                            bool passed = true;
+                            int sq = i - (i % 8);
+                            for(int j = i; j >= 0; j-=8)
+                                if(bitb::get_bit(piece_map, j))
+                                    passed = false;
+                            if(passed)
+                                evaluation += (8 - (sq / 8)) * 6;
                         }
-                        else
+                        else // Black
                         {
-                            // Black
-                            if(bitb::get_bit(pos.pawn_b, i+8)) // Doubled pawns
-                            {
-                                evaluation -= 35; // Doubled pawns are bad...
-                                if(i <= 47 && bitb::get_bit(pos.pawn_b, i+16))
-                                    evaluation -= 100; // ...but tripled pawns are even worse.
-                            }
-                            else
-                            {
-                                // Check if there aren't any pieces in front of this one
-                                // If there are none, then increase this pawn's value based on the number of squares
-                                // left to promotion
-                                int s = i+8;
-                                bool passed = true;
-                                int squares_to_promotion = 0;
-                                while(s > 7)
-                                {
-                                    if(get_bit(piece_map, s))
-                                    {
-                                        passed = false;
-                                        break;
-                                    }
-                                    s += 8;
-                                    squares_to_promotion++;
-                                }
-                                if(passed)
-                                    evaluation += (7 - squares_to_promotion)*15; // Increase the pawn's value if it is an unobstructed passed pawn
-                            }
-                            // Yeah, pawn chains are definately cool
-                            if((i+1) % 8 != 0)
-                                if(get_bit(pos.pawn_b, i - 7))
-                                    evaluation += 20;
-                            if(i % 8 != 0)
-                                if(get_bit(pos.pawn_b, i - 9))
-                                    evaluation += 20;
+                            bool passed = true;
+                            int sq = i - (i % 8);
+                            for(int j = i; j < 64; j+=8)
+                                if(bitb::get_bit(piece_map, j))
+                                    passed = false;
+                            if(passed)
+                                evaluation += ((sq / 8)) * 6;
                         }
                         break;
                     }
 
                     // Knight
-                    // Knights are better in closed positions.
                     case KNIGHT:
                     {
-                        // Knights are better in closed positions, where more pieces are still present
-                        // Knights will not be worth as much in open positions
-                        evaluation += KNIGHT_VALUE + cbrt(board::count_pieces(pos)-20)*12;
+                        evaluation += KNIGHT_VALUE;
                         break;
                     }
 
                     // Bishop
-                    // Bishops are pieces which, similar to rooks, are more valuable in the endgame since they can control more
-                    // squares. The engine should be more willing to trade a bishop for a knight in closed positions.
                     case BISHOP:
                     {
-                        // Generates a bitboard of all pawns present on squares of this bishops's color
-                        // This is needed because, for example, a light-squared bishop is not of much use in a position
-                        // where most of your, and/or the opponent's pawns are put on light squares
-                        bitboard barricade_map = (pos.pawn_w | pos.pawn_b) & (get_bit(board_color_map, i) ? ~board_color_map : board_color_map);
-                        int blocking_pawns = board::count_bits(barricade_map);
-
-                        // Calculates evaluation based on number of pieces present, and pawns which have potential to block the bishop
-                        evaluation += ((BISHOP_VALUE - cbrt(board::count_pieces(pos)-30)*16) - (pow(blocking_pawns, 1.2)));
-
+                        evaluation += BISHOP_VALUE;
                         break;
                     }
 
                     // Rook
-                    // Rooks are endgame pieces, they are much more useful and therefore valuable the less pieces
-                    // are present. Another important factor is file control.
                     case ROOK:
                     {
-                        // (Semi-)file control
-                        // Controlling files is one of the most important things for a rook
-                        // A rook gains a minimal score boost if it controls a file
-                        std::vector<int> rook_moves = board::get_moves(pos, i, ROOK, piece_color, true); // Get all moves
-                        uint8_t squares_controlled = 0;
-                        for(int j = 0; j < rook_moves.size(); ++j)
-                            if((i - rook_moves[j]) % 8 == 0)
-                                squares_controlled++;
-
-                        // Calculate evaluation based on number of pieces present, and file control of this rook
-                        evaluation += ((ROOK_VALUE - cbrt(board::count_pieces(pos)-10)*20) + (SQUARE(squares_controlled)));
+                        evaluation += ROOK_VALUE;
                         break;
                     }
 
                     // Queen
-                    // Queens are important attacking pieces and can completely annihilate an entire position
-                    // when given the opportunity. Queens are more valuable the less pieces are present.
                     case QUEEN:
                     {
-                        evaluation += QUEEN_VALUE - cbrt(board::count_pieces(pos)-30)*25;
+                        evaluation += QUEEN_VALUE;
+                        break;
+                    }
+
+                    // King
+                    case KING:
+                    {
+                        evaluation += 1000000000;
                         break;
                     }
                 }
@@ -294,7 +219,7 @@ int eval_king_safety(struct board::position pos, bool piece_color)
             if(king_location+1 % 8 == 0 && i == 2)
                 continue;
             if(bitb::get_bit(pos.pawn_w, king_location - 17 + i) == 1)
-                pawn_protection += 65; // Panws which are 1 square away from the king provide reduced protection
+                pawn_protection += 90; // Pawns 1 square away from king
         }
     }
     else
@@ -316,12 +241,9 @@ int eval_king_safety(struct board::position pos, bool piece_color)
             if(king_location+1 % 8 == 0 && i == 2)
                 continue;
             if(bitb::get_bit(pos.pawn_b, king_location + 15 + i) == 1)
-                pawn_protection += 65; // Panws which are 1 square away from the king provide reduced protection
+                pawn_protection += 90; // Pawns 1 square away from king
         }
     }
-    // This weird formula makes it so that there is not too big of a difference between having 2 or 3 pawns in front of the king,
-    // but having 1 pawn vs 3 will make a huge impact on the eval
-    evaluation += (int)(sqrt(pawn_protection)*5);
 
     // Enemy pieces aiming at/near king?
     bitb::bitboard control_map = board::get_control_map(pos, !piece_color);
@@ -340,7 +262,7 @@ int eval_king_safety(struct board::position pos, bool piece_color)
             }
         }
     }
-    evaluation -= (SQUARE(attack_magnitude) * 30 - pawn_protection);
+    evaluation -= (SQUARE(attack_magnitude) * 20 - pawn_protection);
     
     return evaluation;
 }
@@ -363,7 +285,7 @@ int eval_board_control(struct board::position pos, bool piece_color)
     bitb::bitboard control_map = board::get_control_map(pos, piece_color);
     for(int i = 0; i < 64; ++i)
         if(get_bit(control_map, i) == 1)
-            eval += value_map[i] / 8; // Increases the evaluation based on the value of the squares controlled
+            eval += value_map[i] / 5; // Increases the evaluation based on the value of the squares controlled
     return eval;
 }
 } // namespace middlegame
@@ -379,8 +301,8 @@ int eval_position(struct board::position pos)
     int evaluation = 0;
 
     // King safety
-    evaluation += middlegame::eval_king_safety(pos, WHITE);
-    evaluation -= middlegame::eval_king_safety(pos, BLACK);
+    //evaluation += middlegame::eval_king_safety(pos, WHITE);
+    //evaluation -= middlegame::eval_king_safety(pos, BLACK);
 
     // Material (includes piece activity and pawn structure)
     evaluation += eval_material(pos, WHITE);

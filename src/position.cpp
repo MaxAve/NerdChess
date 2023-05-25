@@ -10,6 +10,8 @@ a position, such as retrieving piece types from squares and working with them.
 
 using namespace NerdChess::bitb;
 
+// TODO fix bishops teleporting (they're at it again)
+
 namespace NerdChess
 {
 namespace board
@@ -112,6 +114,12 @@ void move_piece(struct position& pos, int location, int new_location)
 			move_bit(pos.pawn_w, location, new_location);
 			if((location - new_location) == 16)
 				en_pessant_squares_b = new_location + 8;
+			// Promote to queen
+			if(new_location < 8)
+			{
+				remove_piece(pos, new_location);
+				set_bit(pos.queen_w, new_location);
+			}
 		}
 		else
 		{
@@ -119,6 +127,12 @@ void move_piece(struct position& pos, int location, int new_location)
 			move_bit(pos.pawn_b, location, new_location);
 			if((new_location - location) == 16)
 				en_pessant_squares_w = new_location - 8;
+			// Promote to queen
+			if(new_location > 55)
+			{
+				remove_piece(pos, new_location);
+				set_bit(pos.queen_b, new_location);
+			}
 		}
 		break;
 
@@ -404,7 +418,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				{
 					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
 						legal_moves.push_back(i);
-					if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
+					if(get_bit(piece_map, i) || i % 8 == 0 || i >= 56)
 						break;
 					i += 7;
 				}
@@ -568,95 +582,202 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 		//
 		// ======================================
 		case QUEEN:
-		// Bishop movement (diagonal)
-		// North-west
-		if(piece_location > 7 && (piece_location % 8) != 0)
+		if(!control)
 		{
-			int i = piece_location - 9;
-			while(1)
+			// ROOK MOVEMENT
+			// Up
+			if(piece_location > 7)
 			{
-				legal_moves.push_back(i);
-				if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
-					break;
-				i -= 9;
+				for(int i = piece_location - 8; i > -1; i -= 8)
+				{
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
+						legal_moves.push_back(i);
+					if(get_bit(piece_map, i))
+						break;
+				}
 			}
-		}
-		// South-east
-		if(piece_location < 56 && ((piece_location+1) % 8) != 0)
-		{
-			int i = piece_location + 9;
-			while(1)
+			// Down
+			if(piece_location < 56)
 			{
-				legal_moves.push_back(i);
-				if(get_bit(piece_map, i) || i >= 56 || (i+1) % 8 == 0)
-					break;
-				i += 9;
+				for(int i = piece_location + 8; i < 56; i += 8)
+				{
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
+						legal_moves.push_back(i);
+					if(get_bit(piece_map, i))
+						break;
+				}
 			}
-		}
-		// North-east
-		if(piece_location > 7 && ((piece_location+1) % 8) != 0)
-		{
-			int i = piece_location - 7;
-			while(1)
+			// Left
+			if(piece_location % 8 != 0)
 			{
-				legal_moves.push_back(i);
-				if(get_bit(piece_map, i) || i < 8 || (i+1) % 8 == 0)
-					break;
-				i -= 7;
+				for(int i = piece_location - 1; i > -1; --i)
+				{
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
+						legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i % 8 == 0)
+						break;
+				}
 			}
-		}
+			// Right
+			if((piece_location+1) % 8 != 0)
+			{
+				for(int i = piece_location + 1; i < 63; ++i)
+				{
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
+						legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || (i+1) % 8 == 0)
+						break;
+				}
+			}
 
-		// South-west
-		if(piece_location < 56 && ((piece_location+1) % 8) != 0)
-		{
-			int i = piece_location + 7;
-			while(1)
+			// BISHOP MOVEMENT
+			// North-west
+			if(piece_location > 7 && (piece_location % 8) != 0)
 			{
-				legal_moves.push_back(i);
-				if(get_bit(piece_map, i) || i < 8 || (i+1) % 8 == 0)
-					break;
-				i += 7;
+				int i = piece_location - 9;
+				while(1)
+				{
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
+						legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
+						break;
+					i -= 9;
+				}
+			}
+			// South-east
+			if(piece_location < 56 && ((piece_location+1) % 8) != 0)
+			{
+				int i = piece_location + 9;
+				while(1)
+				{
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
+						legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i >= 56 || (i+1) % 8 == 0)
+						break;
+					i += 9;
+				}
+			}
+			// North-east
+			if(piece_location > 7 && ((piece_location+1) % 8) != 0)
+			{
+				int i = piece_location - 7;
+				while(1)
+				{
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
+						legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i < 8 || (i+1) % 8 == 0)
+						break;
+					i -= 7;
+				}
+			}
+
+			// South-west
+			if(piece_location < 56 && ((piece_location+1) % 8) != 0)
+			{
+				int i = piece_location + 7;
+				while(1)
+				{
+					if(!get_bit(piece_map, i) || piece_color_at(pos, i, opposite_piece_color))
+						legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i % 8 != 0 || i >= 56)
+						break;
+					i += 7;
+				}
 			}
 		}
-		// Rook movement (horizontal+vertical)
-		// Up
-		if(piece_location > 7)
+		else
 		{
-			for(int i = piece_location - 8; i > 7; i -= 8)
+			// ROOK MOVEMENT
+			// Up
+			if(piece_location > 7)
 			{
-				legal_moves.push_back(i);
-				if(get_bit(piece_map, i))
-					break;
+				for(int i = piece_location - 8; i > -1; i -= 8)
+				{
+					legal_moves.push_back(i);
+					if(get_bit(piece_map, i))
+						break;
+				}
 			}
-		}
-		// Down
-		if(piece_location < 56)
-		{
-			for(int i = piece_location + 8; i < 56; i += 8)
+			// Down
+			if(piece_location < 56)
 			{
-				legal_moves.push_back(i);
-				if(get_bit(piece_map, i))
-					break;
+				for(int i = piece_location + 8; i < 56; i += 8)
+				{
+					legal_moves.push_back(i);
+					if(get_bit(piece_map, i))
+						break;
+				}
 			}
-		}
-		// Left
-		if(piece_location % 8 != 0)
-		{
-			for(int i = piece_location - 1; i > -1; --i)
+			// Left
+			if(piece_location % 8 != 0)
 			{
-				legal_moves.push_back(i);
-				if(get_bit(piece_map, i) || i % 8 == 0)
-					break;
+				for(int i = piece_location - 1; i > -1; --i)
+				{
+					legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i % 8 == 0)
+						break;
+				}
 			}
-		}
-		// Right
-		if((piece_location+1) % 8 != 0)
-		{
-			for(int i = piece_location + 1; i < 63; ++i)
+			// Right
+			if((piece_location+1) % 8 != 0)
 			{
-				legal_moves.push_back(i);
-				if(get_bit(piece_map, i) || (i+1) % 8 == 0)
-					break;
+				for(int i = piece_location + 1; i < 63; ++i)
+				{
+					legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || (i+1) % 8 == 0)
+						break;
+				}
+			}
+
+			// BISHOP MOVEMENT
+			// North-west
+			if(piece_location > 7 && (piece_location % 8) != 0)
+			{
+				int i = piece_location - 9;
+				while(1)
+				{
+					legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i < 8 || i % 8 == 0)
+						break;
+					i -= 9;
+				}
+			}
+			// South-east
+			if(piece_location < 56 && ((piece_location+1) % 8) != 0)
+			{
+				int i = piece_location + 9;
+				while(1)
+				{
+					legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i >= 56 || (i+1) % 8 == 0)
+						break;
+					i += 9;
+				}
+			}
+			// North-east
+			if(piece_location > 7 && ((piece_location+1) % 8) != 0)
+			{
+				int i = piece_location - 7;
+				while(1)
+				{
+					legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i < 8 || (i+1) % 8 == 0)
+						break;
+					i -= 7;
+				}
+			}
+
+			// South-west
+			if(piece_location < 56 && ((piece_location+1) % 8) != 0)
+			{
+				int i = piece_location + 7;
+				while(1)
+				{
+					legal_moves.push_back(i);
+					if(get_bit(piece_map, i) || i < 8 || i % 8 != 0)
+						break;
+					i += 7;
+				}
 			}
 		}
 		break;
@@ -818,12 +939,10 @@ void print_vec(std::vector<int> vec)
 // Prints out the entire collection of bitboards as one board
 void print_board(struct position pos)
 {
-	std::cout << "\033[35m+---+---+---+---+---+---+---+---+\n";
 	for(int i = 0; i < 8; ++i)
 	{
 		for(int j = 0; j < 8; ++j)
 		{
-		std::cout << "\033[35m| ";
 		if(bitb::get_bit(pos.pawn_w, j + i*8) == 1)
 			std::cout << "\033[97mp ";
 		else if(bitb::get_bit(pos.pawn_b, j + i*8) == 1)
@@ -849,9 +968,9 @@ void print_board(struct position pos)
 		else if(bitb::get_bit(pos.king_b, j + i*8) == 1)
 			std::cout << "\033[90mK ";
 		else
-			std::cout << "  ";
+			std::cout << "\033[90m. ";
 		}
-		std::cout << "\033[35m|\n\033[35m+---+---+---+---+---+---+---+---+\n";
+		std::cout << "\n";
 	}
 	std::cout << "\033[97m\n";
 }
