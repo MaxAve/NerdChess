@@ -107,66 +107,33 @@ int eval_material(struct board::position pos, bool piece_color)
                 {
                     // Pawn
                     case PAWN:
-                    {
                         evaluation += PAWN_VALUE;
-                        // Distance to promotion square
-                        if(!piece_color) // White
-                        {
-                            bool passed = true;
-                            int sq = i - (i % 8);
-                            for(int j = i; j >= 0; j-=8)
-                                if(bitb::get_bit(piece_map, j))
-                                    passed = false;
-                            if(passed)
-                                evaluation += (8 - (sq / 8)) * 6;
-                        }
-                        else // Black
-                        {
-                            bool passed = true;
-                            int sq = i - (i % 8);
-                            for(int j = i; j < 64; j+=8)
-                                if(bitb::get_bit(piece_map, j))
-                                    passed = false;
-                            if(passed)
-                                evaluation += ((sq / 8)) * 6;
-                        }
                         break;
-                    }
 
                     // Knight
                     case KNIGHT:
-                    {
                         evaluation += KNIGHT_VALUE;
                         break;
-                    }
 
                     // Bishop
                     case BISHOP:
-                    {
                         evaluation += BISHOP_VALUE;
                         break;
-                    }
 
                     // Rook
                     case ROOK:
-                    {
                         evaluation += ROOK_VALUE;
                         break;
-                    }
 
                     // Queen
                     case QUEEN:
-                    {
                         evaluation += QUEEN_VALUE;
                         break;
-                    }
 
                     // King
                     case KING:
-                    {
                         evaluation += 1000000000;
                         break;
-                    }
                 }
             }
         }

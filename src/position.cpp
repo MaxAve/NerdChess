@@ -10,15 +10,10 @@ a position, such as retrieving piece types from squares and working with them.
 
 using namespace NerdChess::bitb;
 
-// TODO fix bishops teleporting (they're at it again)
-
 namespace NerdChess
 {
 namespace board
 {
-int en_pessant_squares_w = -1;
-int en_pessant_squares_b = -1;
-
 /**
  * @brief Returns true if the square at position square_location is empty
  * @param pos position (board state)
@@ -63,7 +58,8 @@ int get_piece_type(struct position pos, uint8_t square_location)
 		return QUEEN;
 	else if(get_bit(pos.king_w, square_location) || get_bit(pos.king_b, square_location))
 		return KING;
-	return EMPTY;
+	else
+		return EMPTY;
 }
 
 /**
@@ -99,10 +95,6 @@ void move_piece(struct position& pos, int location, int new_location)
 	uint8_t piece_type = get_piece_type(pos, location);
 	bool piece_color = piece_color_at(pos, location, BLACK);
 
-	// Reset en pessant rule
-	en_pessant_squares_w = -1;
-	en_pessant_squares_b = -1;
-
 	remove_piece(pos, new_location); // Capture any pieces previously located at new_location
 
 	switch(piece_type)
@@ -113,7 +105,12 @@ void move_piece(struct position& pos, int location, int new_location)
 			// White pawn
 			move_bit(pos.pawn_w, location, new_location);
 			if((location - new_location) == 16)
-				en_pessant_squares_b = new_location + 8;
+				pos.en_pessant_squares[BLACK] = new_location + 8;
+
+			// En pessant capture
+			if(!piece_color_at(pos, new_location, BLACK))
+				bitb::clear_bit(pos.pawn_b, new_location + 8);
+
 			// Promote to queen
 			if(new_location < 8)
 			{
@@ -126,7 +123,12 @@ void move_piece(struct position& pos, int location, int new_location)
 			// Black pawn
 			move_bit(pos.pawn_b, location, new_location);
 			if((new_location - location) == 16)
-				en_pessant_squares_w = new_location - 8;
+				pos.en_pessant_squares[WHITE] = new_location - 8;
+
+			// En croissant capture
+			if(!piece_color_at(pos, new_location, WHITE))
+				bitb::clear_bit(pos.pawn_b, new_location - 8);
+
 			// Promote to queen
 			if(new_location > 55)
 			{
@@ -134,6 +136,11 @@ void move_piece(struct position& pos, int location, int new_location)
 				set_bit(pos.queen_b, new_location);
 			}
 		}
+
+		// Reset en pessant rule
+		pos.en_pessant_squares[WHITE] = INT_MIN;
+		pos.en_pessant_squares[BLACK] = INT_MIN;
+
 		break;
 
 		case KNIGHT:
@@ -272,8 +279,8 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 			{
 				if(!piece_color) // White pawns
 				{
-					if(en_pessant_squares_w >= 0 && ((piece_location - 9) == en_pessant_squares_w || (piece_location - 7) == en_pessant_squares_w))
-						legal_moves.push_back(en_pessant_squares_w); // En pessant
+					if(pos.en_pessant_squares[WHITE] >= 0 && ((piece_location - 9) == pos.en_pessant_squares[WHITE] || (piece_location - 7) == pos.en_pessant_squares[WHITE]))
+						legal_moves.push_back(pos.en_pessant_squares[WHITE]); // En pessant
 					if(!get_bit(piece_map, piece_location - 8) && piece_location > 7)
 						legal_moves.push_back(piece_location - 8); // 1 square forward
 					if(!get_bit(piece_map, piece_location - 16) && !get_bit(piece_map, piece_location - 8) && piece_location <= 55 && piece_location >= 48)
@@ -285,8 +292,8 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 				}
 				else // Black pawns
 				{
-					if(en_pessant_squares_b >= 0 && ((piece_location + 9) == en_pessant_squares_b || (piece_location + 7) == en_pessant_squares_b))
-						legal_moves.push_back(en_pessant_squares_b); // En pessant
+					if(pos.en_pessant_squares[BLACK] >= 0 && ((piece_location + 9) == pos.en_pessant_squares[BLACK] || (piece_location + 7) == pos.en_pessant_squares[BLACK]))
+						legal_moves.push_back(pos.en_pessant_squares[BLACK]); // En pessant
 					if(get_bit(piece_map, piece_location + 8) == 0 && piece_location < 56)
 						legal_moves.push_back(piece_location + 8); // 1 square forward
 					if(get_bit(piece_map, piece_location + 16) == 0 && get_bit(piece_map, piece_location + 8) == 0 && piece_location <= 15 && piece_location >= 8)
@@ -817,36 +824,17 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 }
 
 /**
- * @brief Initializes an empty position
- * 
- * @return struct position 
- */
-struct position empty_position()
-{
-	struct position epos;
-	epos.pawn_w = 0ULL;
-	epos.pawn_b = 0ULL;
-	epos.knight_w = 0ULL;
-	epos.knight_b = 0ULL;
-	epos.bishop_w = 0ULL;
-	epos.bishop_b = 0ULL;
-	epos.rook_w = 0ULL;
-	epos.rook_b = 0ULL;
-	epos.queen_w = 0ULL;
-	epos.queen_b = 0ULL;
-	epos.bishop_b = 0ULL;
-	epos.king_w = 0ULL;
-	epos.king_b = 0ULL;
-	return epos;
-}
-
-/**
  * @brief Set the up position struct (puts pieces on their according squares)
  * @param pos 
  */
 void setup_position(struct position& pos)
 {
-	// Clear each bitboard (since they are not initialized during definition, they are all randomized)
+	pos.castling_rights[WHITE] = true;
+	pos.castling_rights[BLACK] = true;
+
+	pos.en_pessant_squares[WHITE] = INT_MIN;
+	pos.en_pessant_squares[BLACK] = INT_MIN;
+
 	pos.pawn_w = 0ULL;
 	pos.pawn_b = 0ULL;
 	pos.knight_w = 0ULL;

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <thread>
+#include <vector>
 #include "engine.h"
 
 namespace NerdChess

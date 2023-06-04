@@ -10,8 +10,6 @@ a position, such as retrieving piece types from squares and working with them.
 
 using namespace NerdChess::bitb;
 
-// Piece types
-// Used by the get_moves() function
 #define EMPTY -1
 #define PAWN 0
 #define KNIGHT 1
@@ -20,7 +18,6 @@ using namespace NerdChess::bitb;
 #define QUEEN 4
 #define KING 5
 
-// Piece colors
 #define WHITE 0
 #define BLACK 1
 
@@ -28,12 +25,9 @@ namespace NerdChess
 {
 namespace board
 {
-extern int en_pessant_squares_w; // En pessant square for white pawns (white captures)
-extern int en_pessant_squares_b; // En pessant square for black pawns (black captures)
-
 // A position is a struct containing 14 bitboards
 // 1 bitboard = 1 piece type
-// 7 bitboards = 1 team
+// 6 bitboards = 1 team
 struct position
 {
 	// White pieces
@@ -51,6 +45,14 @@ struct position
 	bitboard rook_b;
 	bitboard queen_b;
 	bitboard king_b;
+
+	// Castling rights
+	bool castling_rights[2];
+
+	// En pessant squares
+	// en_pessant_squares[WHITE] = squares where white can capture
+	// en_pessant_squares[BLACK] = squares where black can capture
+	int en_pessant_squares[2];
 };
 
 bool is_empty(struct position pos, uint8_t square);
@@ -65,8 +67,8 @@ int count_bits(bitboard bb);
 int count_pieces(struct position pos);
 std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type, bool piece_color, bool control);
 void setup_position(struct position& pos);
-struct position empty_position();
 int find_piece(bitboard bb);
+inline struct position get_empty_position() { return (struct position){0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, {true, true}, {INT_MIN, INT_MIN}}; }
 
 namespace debug
 {
