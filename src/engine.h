@@ -1,5 +1,7 @@
 #include <iostream>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 #include "eval.h"
 
 namespace NerdChess

@@ -69,6 +69,7 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 void setup_position(struct position& pos);
 int find_piece(bitboard bb);
 inline struct position get_empty_position() { return (struct position){0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL, {true, true}, {INT_MIN, INT_MIN}}; }
+void print_board(struct position pos, int sp, int ss);
 
 namespace debug
 {

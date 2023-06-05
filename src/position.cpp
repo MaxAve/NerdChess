@@ -905,6 +905,55 @@ int find_piece(bitboard bb)
 	return -1;
 }
 
+void print_board(struct position pos, int sp, int ss)
+{
+	for(int i = 0; i < 8; ++i)
+	{
+		for(int j = 0; j < 8; ++j)
+		{
+			if(sp == j + i*8)
+			{
+				std::cout << "\x1b[43m  \x1b[0m";
+			}
+			else if(ss == j + i*8)
+			{
+				std::cout << "\x1b[43m  \x1b[0m";
+			}
+			else
+			{
+				if(bitb::get_bit(pos.pawn_w, j + i*8) == 1)
+					std::cout << "\033[97mp ";
+				else if(bitb::get_bit(pos.pawn_b, j + i*8) == 1)
+					std::cout << "\033[90mp ";
+				else if(bitb::get_bit(pos.knight_w, j + i*8) == 1)
+					std::cout << "\033[97mN ";
+				else if(bitb::get_bit(pos.knight_b, j + i*8) == 1)
+					std::cout << "\033[90mN ";
+				else if(bitb::get_bit(pos.bishop_w, j + i*8) == 1)
+					std::cout << "\033[97mB ";
+				else if(bitb::get_bit(pos.bishop_b, j + i*8) == 1)
+					std::cout << "\033[90mB ";
+				else if(bitb::get_bit(pos.rook_w, j + i*8) == 1)
+					std::cout << "\033[97mR ";
+				else if(bitb::get_bit(pos.rook_b, j + i*8) == 1)
+					std::cout << "\033[90mR ";
+				else if(bitb::get_bit(pos.queen_w, j + i*8) == 1)
+					std::cout << "\033[97mQ ";
+				else if(bitb::get_bit(pos.queen_b, j + i*8) == 1)
+					std::cout << "\033[90mQ ";
+				else if(bitb::get_bit(pos.king_w, j + i*8) == 1)
+					std::cout << "\033[97mK ";
+				else if(bitb::get_bit(pos.king_b, j + i*8) == 1)
+					std::cout << "\033[90mK ";
+				else
+					std::cout << "\033[90m. ";
+			}
+		}
+		std::cout << "\n";
+	}
+	std::cout << "\033[97m\n";
+}
+
 // Debugging
 namespace debug
 {
@@ -931,32 +980,32 @@ void print_board(struct position pos)
 	{
 		for(int j = 0; j < 8; ++j)
 		{
-		if(bitb::get_bit(pos.pawn_w, j + i*8) == 1)
-			std::cout << "\033[97mp ";
-		else if(bitb::get_bit(pos.pawn_b, j + i*8) == 1)
-			std::cout << "\033[90mp ";
-		else if(bitb::get_bit(pos.knight_w, j + i*8) == 1)
-			std::cout << "\033[97mN ";
-		else if(bitb::get_bit(pos.knight_b, j + i*8) == 1)
-			std::cout << "\033[90mN ";
-		else if(bitb::get_bit(pos.bishop_w, j + i*8) == 1)
-			std::cout << "\033[97mB ";
-		else if(bitb::get_bit(pos.bishop_b, j + i*8) == 1)
-			std::cout << "\033[90mB ";
-		else if(bitb::get_bit(pos.rook_w, j + i*8) == 1)
-			std::cout << "\033[97mR ";
-		else if(bitb::get_bit(pos.rook_b, j + i*8) == 1)
-			std::cout << "\033[90mR ";
-		else if(bitb::get_bit(pos.queen_w, j + i*8) == 1)
-			std::cout << "\033[97mQ ";
-		else if(bitb::get_bit(pos.queen_b, j + i*8) == 1)
-			std::cout << "\033[90mQ ";
-		else if(bitb::get_bit(pos.king_w, j + i*8) == 1)
-			std::cout << "\033[97mK ";
-		else if(bitb::get_bit(pos.king_b, j + i*8) == 1)
-			std::cout << "\033[90mK ";
-		else
-			std::cout << "\033[90m. ";
+			if(bitb::get_bit(pos.pawn_w, j + i*8) == 1)
+				std::cout << "\033[97mp ";
+			else if(bitb::get_bit(pos.pawn_b, j + i*8) == 1)
+				std::cout << "\033[90mp ";
+			else if(bitb::get_bit(pos.knight_w, j + i*8) == 1)
+				std::cout << "\033[97mN ";
+			else if(bitb::get_bit(pos.knight_b, j + i*8) == 1)
+				std::cout << "\033[90mN ";
+			else if(bitb::get_bit(pos.bishop_w, j + i*8) == 1)
+				std::cout << "\033[97mB ";
+			else if(bitb::get_bit(pos.bishop_b, j + i*8) == 1)
+				std::cout << "\033[90mB ";
+			else if(bitb::get_bit(pos.rook_w, j + i*8) == 1)
+				std::cout << "\033[97mR ";
+			else if(bitb::get_bit(pos.rook_b, j + i*8) == 1)
+				std::cout << "\033[90mR ";
+			else if(bitb::get_bit(pos.queen_w, j + i*8) == 1)
+				std::cout << "\033[97mQ ";
+			else if(bitb::get_bit(pos.queen_b, j + i*8) == 1)
+				std::cout << "\033[90mQ ";
+			else if(bitb::get_bit(pos.king_w, j + i*8) == 1)
+				std::cout << "\033[97mK ";
+			else if(bitb::get_bit(pos.king_b, j + i*8) == 1)
+				std::cout << "\033[90mK ";
+			else
+				std::cout << "\033[90m. ";
 		}
 		std::cout << "\n";
 	}

@@ -145,96 +145,6 @@ int eval_material(struct board::position pos, bool piece_color)
 namespace middlegame
 {
 /**
- * @brief Returns the evaluation of the king safety for a team
- * 
- * @return King safety level as float
- */
-int eval_king_safety(struct board::position pos, bool piece_color)
-{
-    int evaluation = 0;
-
-    // Distance to center
-    int king_location = board::find_piece(piece_color ? pos.king_b : pos.king_w);
-
-    // Maps pieces on a bitboard
-    bitboard piece_map = board::map_pieces(pos);
-
-    // If the king is missing return the lowest possible number
-    if(king_location == -1)
-        return -(INT_MAX - 100000); // Retuns the lowest int value - 100,000. We substract 100,000 to ensure there are no overflows
-        
-    evaluation += piece_color ? square_safety_map_b[king_location] : square_safety_map_w[king_location];
-
-    // Pawns in front of king?
-    int pawn_protection = 0;
-    if(!piece_color)
-    {
-        // White king
-        for(int i = 0; i < 3; ++i)
-        {
-            if(king_location % 8 == 0 && i == 0)
-                continue;
-            if(king_location+1 % 8 == 0 && i == 2)
-                continue;
-            if(bitb::get_bit(pos.pawn_w, king_location - 9 + i) == 1)
-                pawn_protection += 100;
-        }
-        for(int i = 0; i < 3; ++i)
-        {
-            if(king_location % 8 == 0 && i == 0)
-                continue;
-            if(king_location+1 % 8 == 0 && i == 2)
-                continue;
-            if(bitb::get_bit(pos.pawn_w, king_location - 17 + i) == 1)
-                pawn_protection += 90; // Pawns 1 square away from king
-        }
-    }
-    else
-    {
-        // Black king
-        for(int i = 0; i < 3; ++i)
-        {
-            if(king_location % 8 == 0 && i == 0)
-                continue;
-            if(king_location+1 % 8 == 0 && i == 2)
-                continue;
-            if(bitb::get_bit(pos.pawn_b, king_location + 7 + i) == 1)
-                pawn_protection += 100;
-        }
-        for(int i = 0; i < 3; ++i)
-        {
-            if(king_location % 8 == 0 && i == 0)
-                continue;
-            if(king_location+1 % 8 == 0 && i == 2)
-                continue;
-            if(bitb::get_bit(pos.pawn_b, king_location + 15 + i) == 1)
-                pawn_protection += 90; // Pawns 1 square away from king
-        }
-    }
-
-    // Enemy pieces aiming at/near king?
-    bitb::bitboard control_map = board::get_control_map(pos, !piece_color);
-    int attack_magnitude = 0; // Number of squares around the king controlled by enemy pieces. E.g: a surrounded king will get an attack magnitude of 8
-    for(int i = -1; i < 2; ++i)
-    {
-        for(int j = -1; j < 2; ++j)
-        {
-            int xy = king_location + ((i * 8) + j - 1);
-            if(xy >= 0 && xy <= 63)
-            {
-                if((king_location % 8 == 0 && j == 0) || ((king_location+1)%8 == 0 && j == 2))
-                    continue;
-                if(get_bit(control_map, xy) == 1)
-                    attack_magnitude++;
-            }
-        }
-    }
-    evaluation -= (SQUARE(attack_magnitude) * 20 - pawn_protection);
-    
-    return evaluation;
-}
-
-/**
  * @brief Returns an evaluation based on the squares which the pieces of a single color control. Quantity of squares as well as their importance is evaluated. Only works when board_control_value_map_w and board_control_value_map_b have been initialized.
  * 
  * @param pos 
@@ -266,10 +176,6 @@ int eval_board_control(struct board::position pos, bool piece_color)
 int eval_position(struct board::position pos)
 {
     int evaluation = 0;
-
-    // King safety
-    //evaluation += middlegame::eval_king_safety(pos, WHITE);
-    //evaluation -= middlegame::eval_king_safety(pos, BLACK);
 
     // Material (includes piece activity and pawn structure)
     evaluation += eval_material(pos, WHITE);

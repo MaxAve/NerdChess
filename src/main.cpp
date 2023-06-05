@@ -9,7 +9,7 @@ Please note: because of school I am not able to add features regularly
 */
 
 #include <iostream>
-#include <chrono>
+#include <Windows.h>
 #include "engine.h"
 
 // Main function
@@ -22,36 +22,114 @@ int main()
 	NerdChess::generate_square_safety_map(NerdChess::square_safety_map_b, BLACK);
 	NerdChess::board_color_map = NerdChess::generate_board_color_map();
 
-	//! TESTS
-	struct NerdChess::board::position test_pos = NerdChess::board::get_empty_position();
+	// Initialize board
+	struct NerdChess::board::position board = NerdChess::board::get_empty_position();
+	NerdChess::board::setup_position(board);
 
-	NerdChess::board::setup_position(test_pos);
+	int selected_piece = 63;
+	int selected_square = 63;
 
 	while(1)
 	{
-		struct NerdChess::engine::engine_eval eval1 = NerdChess::engine::minimax(test_pos, true, -INT_MAX, INT_MAX, 4);
-		NerdChess::board::move_piece(test_pos, eval1.best_move[0], eval1.best_move[1]);
-
+		// PLayer turn
 		system("cls");
-		NerdChess::board::debug::print_board(test_pos);
+		NerdChess::board::print_board(board, -1, selected_square);
 
-		/*int from;
-		int to;
-		std::cout << "\nFrom: ";
-		std::cin >> from;
-		std::cout << "To: ";
-		std::cin >> to;
+		// Select piece
+		while(1)
+		{
+			if(GetKeyState(VK_UP) & 0x8000)
+			{
+				selected_piece -= 8;
+				system("cls");
+				NerdChess::board::print_board(board, selected_piece, -1);
+			}
 
-		NerdChess::board::move_piece(test_pos, from, to);*/
+			if(GetKeyState(VK_DOWN) & 0x8000)
+			{
+				selected_piece += 8;
+				system("cls");
+				NerdChess::board::print_board(board, selected_piece, -1);
+			}
 
+			if(GetKeyState(VK_LEFT) & 0x8000)
+			{
+				selected_piece--;
+				system("cls");
+				NerdChess::board::print_board(board, selected_piece, -1);
+			}
+
+			if(GetKeyState(VK_RIGHT) & 0x8000)
+			{
+				selected_piece++;
+				system("cls");
+				NerdChess::board::print_board(board, selected_piece, -1);
+			}
+
+			if(GetKeyState(VK_SPACE) & 0x8000)
+			{
+				system("cls");
+				NerdChess::board::print_board(board, selected_piece, -1);
+				selected_square = selected_piece;
+				break;
+			}
+
+			Sleep(80);
+		}
+
+		Sleep(200);
+
+		// Select square
+		while(1)
+		{
+			if(GetKeyState(VK_UP) & 0x8000)
+			{
+				selected_square -= 8;
+				system("cls");
+				NerdChess::board::print_board(board, -1, selected_square);
+			}
+
+			if(GetKeyState(VK_DOWN) & 0x8000)
+			{
+				selected_square += 8;
+				system("cls");
+				NerdChess::board::print_board(board, -1, selected_square);
+			}
+
+			if(GetKeyState(VK_LEFT) & 0x8000)
+			{
+				selected_square--;
+				system("cls");
+				NerdChess::board::print_board(board, -1, selected_square);
+			}
+
+			if(GetKeyState(VK_RIGHT) & 0x8000)
+			{
+				selected_square++;
+				system("cls");
+				NerdChess::board::print_board(board, -1, selected_square);
+			}
+
+			if(GetKeyState(VK_SPACE) & 0x8000)
+			{
+				system("cls");
+				NerdChess::board::print_board(board, -1, selected_square);
+				break;
+			}
+
+			Sleep(80);
+		}
+
+		NerdChess::board::move_piece(board, selected_piece, selected_square);
 		system("cls");
-		NerdChess::board::debug::print_board(test_pos);
+		NerdChess::board::debug::print_board(board);
 
-		struct NerdChess::engine::engine_eval eval2 = NerdChess::engine::minimax(test_pos, false, -INT_MAX, INT_MAX, 4);
-		NerdChess::board::move_piece(test_pos, eval2.best_move[0], eval2.best_move[1]);
+		// CPU turn
 
+		struct NerdChess::engine::engine_eval eval = NerdChess::engine::minimax(board, false, -INT_MAX, INT_MAX, 4);
+		NerdChess::board::move_piece(board, eval.best_move[0], eval.best_move[1]);
 		system("cls");
-		NerdChess::board::debug::print_board(test_pos);
+		NerdChess::board::debug::print_board(board);
 	}
 
 	return 0;

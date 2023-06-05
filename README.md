@@ -6,9 +6,8 @@ is currently a work-in-progress, and many features are still missing.
 Here is what I plan on adding and what I am currently attempting to implement:
 1. Bitboard implementation - **DONE**
 2. Moving/capturing pieces - *ALMOST DONE*
-3. Position evaluation - *ALMOST DONE*
-4. Minimax algorithm - *WIP*
+3. Position evaluation - *WIP*
+4. Minimax algorithm - **DONE**
 5. Add opening book
-6. Necessary optimizations (optional)
 7. Add support for importing/exporting PGN and FEN (optional)
-8. Add interactive GUI
+8. Add interactive GUI - *WIP*

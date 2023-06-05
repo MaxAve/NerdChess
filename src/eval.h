@@ -46,7 +46,6 @@ namespace eval
 int eval_material(struct board::position pos, bool piece_color);
 namespace middlegame
 {
-int eval_king_safety(struct board::position pos, bool piece_color);
 int eval_board_control(struct board::position pos, bool piece_color);
 } // namespace middlegame
 int eval_position(struct board::position pos);
