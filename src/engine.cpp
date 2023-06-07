@@ -17,7 +17,7 @@ namespace engine
 struct engine_eval minimax(struct board::position pos, bool maximizing, int alpha, int beta, uint8_t depth)
 {
     int evaluation = 0;
-    int best_move[2] = {0};
+    int best_move[2] = {8, 16};
 
     if(maximizing)
         evaluation = -INT_MAX;

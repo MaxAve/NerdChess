@@ -89,7 +89,22 @@ namespace eval
  * @param piece_color 
  * @return int 
  */
-int eval_material(struct board::position pos, bool piece_color)
+int eval_material(struct board::position pos)
+{
+    int evaluation = 0;
+    bitboard piece_map = board::map_pieces(pos);
+    const int piece_values[] = {PAWN_VALUE, KNIGHT_VALUE, BISHOP_VALUE, ROOK_VALUE, QUEEN_VALUE, 1000000000, -PAWN_VALUE, -KNIGHT_VALUE, -BISHOP_VALUE, -ROOK_VALUE, -QUEEN_VALUE, -1000000000};
+
+    for(int i = 0; i < 64; ++i)
+    {
+        if(bitb::get_bit(piece_map, i))
+        {
+            evaluation += piece_values[board::get_full_piece_type(pos, i)];
+        }
+    }
+    return evaluation;
+}
+/*int eval_material(struct board::position pos, bool piece_color)
 {
     int evaluation = 0;
 
@@ -139,7 +154,7 @@ int eval_material(struct board::position pos, bool piece_color)
         }
     }
     return evaluation;
-}
+}*/
 
 // Evaluation functions for the middlegame phase
 namespace middlegame
@@ -178,8 +193,7 @@ int eval_position(struct board::position pos)
     int evaluation = 0;
 
     // Material (includes piece activity and pawn structure)
-    evaluation += eval_material(pos, WHITE);
-    evaluation -= eval_material(pos, BLACK);
+    evaluation += eval_material(pos);
 
 	// Control
     evaluation += middlegame::eval_board_control(pos, WHITE);

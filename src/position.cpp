@@ -16,35 +16,68 @@ namespace board
 {
 /**
  * @brief Returns true if the square at position square_location is empty
- * @param pos position (board state)
+ * @param board position (board state)
  * @param square_location the location on the board at which to check for pieces
  */
-bool is_empty(struct position pos, uint8_t square_location)
+bool is_empty(struct position board, uint8_t square_location)
+{
+	for(int i = 0; i < 12; ++i)
+		if(get_bit(board.pieces[i], square_location))
+			return false;
+	return true;
+}
+/* bool is_empty(struct position pos, uint8_t square_location)
 {
     return !(get_bit(pos.pawn_w, square_location) | get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_w, square_location) | get_bit(pos.king_b, square_location));
-}
+} */
 
 /**
  * @brief 
  * Is quite similar to is_empty() but instead of returning whether a square
  * is empty or not, piece_color_at() returns whether a piece of a specific
  * color (white/black) is on the square.
- * @param pos position (board state)
+ * @param board position (board state)
  * @param square_location the location on the board at which to check
  * @param piece_color piece color to check for
  */
-bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_color)
+bool piece_color_at(struct position board, uint8_t square_location, uint8_t piece_color)
+{
+	if(!piece_color)
+	{
+		for(int i = 0; i < 6; ++i)
+			if(get_bit(board.pieces[i], square_location))
+				return true;
+	}
+	else
+	{
+		for(int i = 6; i < 12; ++i)
+			if(get_bit(board.pieces[i], square_location))
+				return true;
+	}
+	return false;
+}
+/* bool piece_color_at(struct position pos, uint8_t square_location, uint8_t piece_color)
 {
     return (piece_color == WHITE ? (get_bit(pos.pawn_w, square_location) | get_bit(pos.knight_w, square_location) | get_bit(pos.bishop_w, square_location) | get_bit(pos.rook_w, square_location) | get_bit(pos.queen_w, square_location) | get_bit(pos.king_w, square_location)) : (get_bit(pos.pawn_b, square_location) | get_bit(pos.knight_b, square_location) | get_bit(pos.bishop_b, square_location) | get_bit(pos.rook_b, square_location) | get_bit(pos.queen_b, square_location) | get_bit(pos.king_b, square_location)));
-}
+} */
 
 /**
  * @brief Returns the piece type at the selected square. Use macros declared in position.h (PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING)
  * 
- * @param pos 
+ * @param board 
  * @param square_location 
  */
-int get_piece_type(struct position pos, uint8_t square_location)
+int get_piece_type(struct position board, uint8_t square_location)
+{
+	for(int i = 0; i < 6; ++i)
+		if(get_bit(board.pieces[i], square_location))
+			return i;
+	for(int i = 6; i < 12; ++i)
+		if(get_bit(board.pieces[i], square_location))
+			return i-6;
+	return EMPTY;
+}
+/* int get_piece_type(struct position pos, uint8_t square_location)
 {
 	if(get_bit(pos.pawn_w, square_location) || get_bit(pos.pawn_b, square_location))
 		return PAWN;
@@ -60,15 +93,35 @@ int get_piece_type(struct position pos, uint8_t square_location)
 		return KING;
 	else
 		return EMPTY;
+} */
+
+/**
+ * @brief Returns a piece ID from 0-12
+ * 
+ * @param board 
+ * @param square_location 
+ * @return int 
+ */
+int get_full_piece_type(struct position board, uint8_t square_location)
+{
+	for(int i = 0; i < 12; ++i)
+		if(get_bit(board.pieces[i], square_location))
+			return i;
+	return EMPTY;
 }
 
 /**
  * @brief Removes a piece from the board
  * 
- * @param pos 
- * @param location 
+ * @param board 
+ * @param square_location 
  */
-void remove_piece(struct position& pos, int location)
+void remove_piece(struct position& board, int square_location)
+{
+	for(int i = 0; i < 12; ++i)
+		clear_bit(board.pieces[i], square_location);
+}
+/* void remove_piece(struct position& pos, int location)
 {
 	clear_bit(pos.pawn_w, location);
 	clear_bit(pos.pawn_b, location);
@@ -82,15 +135,50 @@ void remove_piece(struct position& pos, int location)
 	clear_bit(pos.queen_b, location);
 	clear_bit(pos.king_w, location);
 	clear_bit(pos.king_b, location);
-}
+} */
 
 /**
  * @brief Moves a piece from location to new_location
  * 
- * @param pos 
+ * @param board 
  * @param new_location 
  */
-void move_piece(struct position& pos, int location, int new_location)
+void move_piece(struct position& board, int from, int to)
+{
+	int piece = get_full_piece_type(board, from);
+	remove_piece(board, to);
+	move_bit(board.pieces[piece], from, to);
+	// Special pawn moves
+	if(piece == PAWN)
+	{
+		if((from - to) == 16)
+			board.en_pessant_squares[BLACK] = to + 8;
+		// En pessant capture
+		if(!piece_color_at(board, to, BLACK))
+			bitb::clear_bit(board.pieces[6], to + 8);
+		// Promote to queen
+		if(to < 8)
+		{
+			remove_piece(board, to);
+			set_bit(board.pieces[QUEEN], to);
+		}
+	}
+	else if(piece == PAWN+6) // Black pawn
+	{
+		if((to - from) == 16)
+			board.en_pessant_squares[WHITE] = to - 8;
+		// En croissant capture
+		if(!piece_color_at(board, to, WHITE))
+			bitb::clear_bit(board.pieces[PAWN], to - 8);
+		// Promote to queen
+		if(to > 55)
+		{
+			remove_piece(board, to);
+			set_bit(board.pieces[QUEEN+6], to);
+		}
+	}
+}
+/* void move_piece(struct position& pos, int location, int new_location)
 {
 	uint8_t piece_type = get_piece_type(pos, location);
 	bool piece_color = piece_color_at(pos, location, BLACK);
@@ -163,7 +251,7 @@ void move_piece(struct position& pos, int location, int new_location)
 		move_bit((piece_color ? pos.king_b : pos.king_w), location, new_location);
 		break;
 	}
-}
+} */
 
 /**
  * @brief 
@@ -184,11 +272,22 @@ bitboard map_bitboard(std::vector<int> vec)
  * @brief
  * Returns a bitboard of all squares at which ALL pieces of a specific color control.
  * This can be useful for figuring out whether a king is allowed to move to a specific square.
- * @param pos position (board state)
+ * @param board position (board state)
  * @param piece_color
- * @return unsigned long long (bitboard)
+ * @return bitboard
 */
-bitboard get_control_map(struct position pos, bool piece_color)
+bitboard get_control_map(struct position board, bool piece_color)
+{
+	bitboard map = 0ULL;
+	for(int i = 0; i < 64; i++)
+	{
+		int piece = get_piece_type(board, i);
+		if(piece != EMPTY)
+			map |= map_bitboard(get_moves(board, i, piece, piece_color, true));
+	}
+	return map;
+}
+/* bitboard get_control_map(struct position pos, bool piece_color)
 {
 	bitboard map = 0ULL;
 	for(int i = 0; i < 64; ++i)
@@ -207,18 +306,25 @@ bitboard get_control_map(struct position pos, bool piece_color)
 			map = map | map_bitboard(get_moves(pos, i, KING, piece_color, true));
 	}
 	return map;
-}
+} */
 
 /**
  * @brief Maps all pieces in a position on a bitboard
  * 
- * @param pos 
+ * @param board 
  * @return bitboard 
  */
-bitboard map_pieces(struct position pos)
+bitboard map_pieces(struct position board)
+{
+	bitboard map = 0ULL;
+	for(int i = 0; i < 12; ++i)
+		map |= board.pieces[i];
+	return map;
+}
+/* bitboard map_pieces(struct position pos)
 {
     return pos.pawn_w | pos.pawn_b | pos.knight_w | pos.knight_b | pos.bishop_w | pos.bishop_b | pos.rook_w | pos.rook_b | pos.queen_w | pos.queen_b | pos.king_w | pos.king_b;
-}
+} */
 
 /**
  * @brief Returns the number of positive bits in a bitboard (ones)
@@ -228,27 +334,25 @@ bitboard map_pieces(struct position pos)
  */
 int count_bits(bitboard bb)
 {
-	uint8_t num_pieces = 0;
+	uint8_t num_bits = 0;
 	for(int i = 0; i < 64; ++i)
-		if(get_bit(bb, i) == 1)
-			num_pieces++;
-	return num_pieces;
+		if(get_bit(bb, i))
+			num_bits++;
+	return num_bits;
 }
 
 /**
  * @brief Returns the number of pieces on the board
  * 
- * @param pos 
+ * @param board 
  * @return Number of pieces 
  */
-int count_pieces(struct position pos)
+int count_pieces(struct position board)
 {
-	bitboard pos_map = pos.pawn_w | pos.pawn_b | pos.knight_w | pos.knight_b | pos.bishop_w | pos.bishop_b | pos.rook_w | pos.rook_b | pos.queen_w | pos.queen_b | pos.king_w | pos.king_b;
-	uint8_t num_pieces = 0;
-	for(int i = 0; i < 64; ++i)
-		if(get_bit(pos_map, i) == 1)
-			num_pieces++;
-	return num_pieces;
+	bitboard map = 0ULL;
+	for(int i = 0; i < 12; ++i)
+		map |= board.pieces[i];
+	return count_bits(map);
 }
 
 /**
@@ -825,67 +929,57 @@ std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t 
 
 /**
  * @brief Set the up position struct (puts pieces on their according squares)
- * @param pos 
+ * @param board 
  */
-void setup_position(struct position& pos)
+void setup_position(struct position& board)
 {
-	pos.castling_rights[WHITE] = true;
-	pos.castling_rights[BLACK] = true;
+	board.castling_rights[WHITE] = true;
+	board.castling_rights[BLACK] = true;
 
-	pos.en_pessant_squares[WHITE] = INT_MIN;
-	pos.en_pessant_squares[BLACK] = INT_MIN;
+	board.en_pessant_squares[WHITE] = INT_MIN;
+	board.en_pessant_squares[BLACK] = INT_MIN;
 
-	pos.pawn_w = 0ULL;
-	pos.pawn_b = 0ULL;
-	pos.knight_w = 0ULL;
-	pos.knight_b = 0ULL;
-	pos.bishop_w = 0ULL;
-	pos.bishop_b = 0ULL;
-	pos.rook_w = 0ULL;
-	pos.rook_b = 0ULL;
-	pos.queen_w = 0ULL;
-	pos.queen_b = 0ULL;
-	pos.king_w = 0ULL;
-	pos.king_b = 0ULL;
+	for(int i = 0; i < 12; ++i)
+		board.pieces[i] = 0ULL;
 
 	// Pawns
 	for(int i = 0; i < 8; ++i)
 	{
-		set_bit(pos.pawn_w, i + 48); // Black pawns
-		set_bit(pos.pawn_b, i + 8); // Black pawns
+		set_bit(board.pieces[0], i + 48); // Black pawns
+		set_bit(board.pieces[6], i + 8); // Black pawns
 	}
 
 	// Knights
 	// White knights
-	set_bit(pos.knight_w, 62);
-	set_bit(pos.knight_w, 57);
+	set_bit(board.pieces[1], 62);
+	set_bit(board.pieces[1], 57);
 	// Black knights
-	set_bit(pos.knight_b, 6);
-	set_bit(pos.knight_b, 1);
+	set_bit(board.pieces[7], 6);
+	set_bit(board.pieces[7], 1);
 
 	// Bishops
 	// White bishops
-	set_bit(pos.bishop_w, 61);
-	set_bit(pos.bishop_w, 58);
+	set_bit(board.pieces[2], 61);
+	set_bit(board.pieces[2], 58);
 	// Black bishops
-	set_bit(pos.bishop_b, 5);
-	set_bit(pos.bishop_b, 2);
+	set_bit(board.pieces[8], 5);
+	set_bit(board.pieces[8], 2);
 
 	// THE ROOK
 	// White rook
-	set_bit(pos.rook_w, 63);
-	set_bit(pos.rook_w, 56);
+	set_bit(board.pieces[3], 63);
+	set_bit(board.pieces[3], 56);
 	// Black rook
-	set_bit(pos.rook_b, 7);
-	set_bit(pos.rook_b, 0);
+	set_bit(board.pieces[9], 7);
+	set_bit(board.pieces[9], 0);
 
 	// Queen
-	set_bit(pos.queen_w, 59); // White queen
-	set_bit(pos.queen_b, 3); // Black queen
+	set_bit(board.pieces[4], 59); // White queen
+	set_bit(board.pieces[10], 3); // Black queen
 
 	// King
-	set_bit(pos.king_w, 60); // White king
-	set_bit(pos.king_b, 4); // Black king
+	set_bit(board.pieces[5], 60); // White king
+	set_bit(board.pieces[11], 4); // Black king
 }
 
 /**
@@ -905,48 +999,24 @@ int find_piece(bitboard bb)
 	return -1;
 }
 
-void print_board(struct position pos, int sp, int ss)
+void print_board(struct position board, int sp, int ss)
 {
+	const std::string piece_symbols[] = {"\033[97mp", "\033[97mN", "\033[97mB", "\033[97mR", "\033[97mQ", "\033[97mK", "\033[90mp", "\033[90mN", "\033[90mB", "\033[90mR", "\033[90mQ", "\033[90mK"};
 	for(int i = 0; i < 8; ++i)
 	{
 		for(int j = 0; j < 8; ++j)
 		{
 			if(sp == j + i*8)
-			{
 				std::cout << "\x1b[43m  \x1b[0m";
-			}
 			else if(ss == j + i*8)
-			{
 				std::cout << "\x1b[43m  \x1b[0m";
-			}
 			else
 			{
-				if(bitb::get_bit(pos.pawn_w, j + i*8) == 1)
-					std::cout << "\033[97mp ";
-				else if(bitb::get_bit(pos.pawn_b, j + i*8) == 1)
-					std::cout << "\033[90mp ";
-				else if(bitb::get_bit(pos.knight_w, j + i*8) == 1)
-					std::cout << "\033[97mN ";
-				else if(bitb::get_bit(pos.knight_b, j + i*8) == 1)
-					std::cout << "\033[90mN ";
-				else if(bitb::get_bit(pos.bishop_w, j + i*8) == 1)
-					std::cout << "\033[97mB ";
-				else if(bitb::get_bit(pos.bishop_b, j + i*8) == 1)
-					std::cout << "\033[90mB ";
-				else if(bitb::get_bit(pos.rook_w, j + i*8) == 1)
-					std::cout << "\033[97mR ";
-				else if(bitb::get_bit(pos.rook_b, j + i*8) == 1)
-					std::cout << "\033[90mR ";
-				else if(bitb::get_bit(pos.queen_w, j + i*8) == 1)
-					std::cout << "\033[97mQ ";
-				else if(bitb::get_bit(pos.queen_b, j + i*8) == 1)
-					std::cout << "\033[90mQ ";
-				else if(bitb::get_bit(pos.king_w, j + i*8) == 1)
-					std::cout << "\033[97mK ";
-				else if(bitb::get_bit(pos.king_b, j + i*8) == 1)
-					std::cout << "\033[90mK ";
-				else
+				const int piece_type = get_full_piece_type(board, i*8+j);
+				if(piece_type == EMPTY)
 					std::cout << "\033[90m. ";
+				else
+					std::cout << piece_symbols[piece_type] << " ";
 			}
 		}
 		std::cout << "\n";
@@ -974,38 +1044,18 @@ void print_vec(std::vector<int> vec)
 }
 
 // Prints out the entire collection of bitboards as one board
-void print_board(struct position pos)
+void print_board(struct position board)
 {
+	const std::string piece_symbols[] = {"\033[97mp", "\033[97mN", "\033[97mB", "\033[97mR", "\033[97mQ", "\033[97mK", "\033[90mp", "\033[90mN", "\033[90mB", "\033[90mR", "\033[90mQ", "\033[90mK"};
 	for(int i = 0; i < 8; ++i)
 	{
 		for(int j = 0; j < 8; ++j)
 		{
-			if(bitb::get_bit(pos.pawn_w, j + i*8) == 1)
-				std::cout << "\033[97mp ";
-			else if(bitb::get_bit(pos.pawn_b, j + i*8) == 1)
-				std::cout << "\033[90mp ";
-			else if(bitb::get_bit(pos.knight_w, j + i*8) == 1)
-				std::cout << "\033[97mN ";
-			else if(bitb::get_bit(pos.knight_b, j + i*8) == 1)
-				std::cout << "\033[90mN ";
-			else if(bitb::get_bit(pos.bishop_w, j + i*8) == 1)
-				std::cout << "\033[97mB ";
-			else if(bitb::get_bit(pos.bishop_b, j + i*8) == 1)
-				std::cout << "\033[90mB ";
-			else if(bitb::get_bit(pos.rook_w, j + i*8) == 1)
-				std::cout << "\033[97mR ";
-			else if(bitb::get_bit(pos.rook_b, j + i*8) == 1)
-				std::cout << "\033[90mR ";
-			else if(bitb::get_bit(pos.queen_w, j + i*8) == 1)
-				std::cout << "\033[97mQ ";
-			else if(bitb::get_bit(pos.queen_b, j + i*8) == 1)
-				std::cout << "\033[90mQ ";
-			else if(bitb::get_bit(pos.king_w, j + i*8) == 1)
-				std::cout << "\033[97mK ";
-			else if(bitb::get_bit(pos.king_b, j + i*8) == 1)
-				std::cout << "\033[90mK ";
-			else
+			const int piece_type = get_full_piece_type(board, i*8+j);
+			if(piece_type == EMPTY)
 				std::cout << "\033[90m. ";
+			else
+				std::cout << piece_symbols[piece_type] << " ";
 		}
 		std::cout << "\n";
 	}

@@ -29,7 +29,7 @@ int main()
 	int selected_piece = 63;
 	int selected_square = 63;
 
-	while(1)
+ 	while(1)
 	{
 		// PLayer turn
 		system("cls");
@@ -125,9 +125,9 @@ int main()
 		NerdChess::board::debug::print_board(board);
 
 		// CPU turn
-
 		struct NerdChess::engine::engine_eval eval = NerdChess::engine::minimax(board, false, -INT_MAX, INT_MAX, 4);
 		NerdChess::board::move_piece(board, eval.best_move[0], eval.best_move[1]);
+		std::cout << eval.best_move[1] << "\n";
 		system("cls");
 		NerdChess::board::debug::print_board(board);
 	}
