@@ -1,16 +1,23 @@
-/*
-NerdChess is my first attempt at making a working Chess Engine, I started working on it somewhere in
-the spring of 2023 when I was 15.
-
-This is currently a WIP (work in progress), but I am regularly adding new features. For more info,
-go to README.md
-
-Please note: because of school I am not able to add features regularly
-*/
-
 #include <iostream>
 #include <Windows.h>
-#include "engine.h"
+#include "headers/engine.h"
+#include "headers/opening.h"
+
+// TODO Move to a different file?
+std::string board_to_str(NerdChess::board::position board)
+{
+    const char piece_chars[] = {'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'};
+    std::string str;
+    for(int i = 0; i < 64; ++i)
+	{
+		int pt = NerdChess::board::get_full_piece_type(board, i);
+		if(pt == EMPTY)
+			str += ".";
+		else
+			str += piece_chars[pt];
+	}
+    return str;
+}
 
 // Main function
 int main()
@@ -18,18 +25,21 @@ int main()
 	// Initialization
 	NerdChess::generate_board_control_value_map(NerdChess::board_control_value_map_w, WHITE);
 	NerdChess::generate_board_control_value_map(NerdChess::board_control_value_map_b, BLACK);
-	NerdChess::generate_square_safety_map(NerdChess::square_safety_map_w, WHITE);
-	NerdChess::generate_square_safety_map(NerdChess::square_safety_map_b, BLACK);
+	NerdChess::generate_square_safety_map(NerdChess::square_safety_map_w, WHITE); // ?
+	NerdChess::generate_square_safety_map(NerdChess::square_safety_map_b, BLACK); // ?
 	NerdChess::board_color_map = NerdChess::generate_board_color_map();
+	NerdChess::opening::init_opening_book();
 
 	// Initialize board
 	struct NerdChess::board::position board = NerdChess::board::get_empty_position();
 	NerdChess::board::setup_position(board);
 
+	// Cursor
 	int selected_piece = 63;
 	int selected_square = 63;
 
- 	while(1)
+	// Game
+	while(1)
 	{
 		// PLayer turn
 		system("cls");
@@ -38,28 +48,28 @@ int main()
 		// Select piece
 		while(1)
 		{
-			if(GetKeyState(VK_UP) & 0x8000)
+			if(GetKeyState('W') & 0x8000)
 			{
 				selected_piece -= 8;
 				system("cls");
 				NerdChess::board::print_board(board, selected_piece, -1);
 			}
 
-			if(GetKeyState(VK_DOWN) & 0x8000)
+			if(GetKeyState('S') & 0x8000)
 			{
 				selected_piece += 8;
 				system("cls");
 				NerdChess::board::print_board(board, selected_piece, -1);
 			}
 
-			if(GetKeyState(VK_LEFT) & 0x8000)
+			if(GetKeyState('A') & 0x8000)
 			{
 				selected_piece--;
 				system("cls");
 				NerdChess::board::print_board(board, selected_piece, -1);
 			}
 
-			if(GetKeyState(VK_RIGHT) & 0x8000)
+			if(GetKeyState('D') & 0x8000)
 			{
 				selected_piece++;
 				system("cls");
@@ -82,28 +92,28 @@ int main()
 		// Select square
 		while(1)
 		{
-			if(GetKeyState(VK_UP) & 0x8000)
+			if(GetKeyState('W') & 0x8000)
 			{
 				selected_square -= 8;
 				system("cls");
 				NerdChess::board::print_board(board, -1, selected_square);
 			}
 
-			if(GetKeyState(VK_DOWN) & 0x8000)
+			if(GetKeyState('S') & 0x8000)
 			{
 				selected_square += 8;
 				system("cls");
 				NerdChess::board::print_board(board, -1, selected_square);
 			}
 
-			if(GetKeyState(VK_LEFT) & 0x8000)
+			if(GetKeyState('A') & 0x8000)
 			{
 				selected_square--;
 				system("cls");
 				NerdChess::board::print_board(board, -1, selected_square);
 			}
 
-			if(GetKeyState(VK_RIGHT) & 0x8000)
+			if(GetKeyState('D') & 0x8000)
 			{
 				selected_square++;
 				system("cls");
@@ -125,11 +135,20 @@ int main()
 		NerdChess::board::debug::print_board(board);
 
 		// CPU turn
-		struct NerdChess::engine::engine_eval eval = NerdChess::engine::minimax(board, false, -INT_MAX, INT_MAX, 4);
-		NerdChess::board::move_piece(board, eval.best_move[0], eval.best_move[1]);
-		std::cout << eval.best_move[1] << "\n";
-		system("cls");
-		NerdChess::board::debug::print_board(board);
+		try
+		{
+			// See if a book move is possible
+			auto book_move = NerdChess::opening::book.at(board_to_str(board));
+			NerdChess::board::move_piece(board, book_move[0], book_move[1]);
+		}
+		catch(const std::exception& e)
+		{
+			struct NerdChess::engine::engine_eval eval = NerdChess::engine::minimax(board, false, -INT_MAX, INT_MAX, 4); // Actual thinking
+			NerdChess::board::move_piece(board, eval.best_move[0], eval.best_move[1]);
+
+			system("cls");
+			NerdChess::board::debug::print_board(board);
+		}
 	}
 
 	return 0;

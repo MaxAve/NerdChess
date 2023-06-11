@@ -1,13 +1,5 @@
-/*
-eval.* files contain all the necessary functions to evaluate positions at
-different stages of the game.
-
-Things to note:
-Evaluation is always x100 larger than it actually should be. This is because
-the last 2 digits can be viewed as "fractions". Working with floating-point numbers
-proved to be error-prone.
-Example: in chess a queen is worth 9 points, and here it is 900
-*/
+#ifndef EVAL_H
+#define EVAL_H
 
 #include <iostream>
 #include "position.h"
@@ -51,3 +43,5 @@ int eval_board_control(struct board::position pos, bool piece_color);
 int eval_position(struct board::position pos);
 } // namespace eval
 } // namespace NerdChess
+
+#endif

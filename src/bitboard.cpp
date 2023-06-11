@@ -8,18 +8,12 @@ computation.
 */
 
 #include <iostream>
-#include "bitboard.h"
+#include "headers/bitboard.h"
 
 namespace NerdChess
 {
 namespace bitb
 {
-/**
- * @brief Moves the positive value of a bit to a new location. E.g: move_bit(0001, 3, 0) -> 1000
- * 
- * @param bb 
- * @param pos 
- */
 void move_bit(bitboard& bb, int from, int to)
 {
 	clear_bit(bb, from);

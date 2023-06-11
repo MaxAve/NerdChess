@@ -1,17 +1,6 @@
-/*
-eval.* files contain all the necessary functions to evaluate positions at
-different stages of the game.
-
-Things to note:
-Evaluation is always x100 larger than it actually should be. This is because
-the last 2 digits can be viewed as "fractions". Working with floating-point numbers
-proved to be error-prone.
-Example: in chess a queen is worth 9 points, and here it is 900
-*/
-
 #include <iostream>
 #include <math.h>
-#include "eval.h"
+#include "headers/eval.h"
 
 namespace NerdChess
 {
@@ -25,12 +14,6 @@ bitboard board_color_map = 0ULL;
 
 bool is_endgame = false;
 
-/**
- * @brief Generates a map on which each square has a specific value. This can be used to determine whether a piece controls useful squares. "Good squares" include squares on the enemy side and center squares.
- * 
- * @param buf Buffer to save to
- * @param piece_color Which pieces should use the map
- */
 void generate_board_control_value_map(int* buf, bool piece_color)
 {
     if(!piece_color)
@@ -45,31 +28,24 @@ void generate_board_control_value_map(int* buf, bool piece_color)
                 buf[63 - (i*8+j)] = (int)pow(sqrt(8-i)*2 + (5 - sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2);
 }
 
-/**
- * @brief Generates a square safety map to the provided buffer. Safe squares include squares closer to the corners
- * 
- * @param buf Buffer to save to
- * @param piece_color Which pieces should use the map
- */
 void generate_square_safety_map(int* buf, bool piece_color)
 {
     if(piece_color)
+    {
         // For white pieces
         for(int i = 0; i < 8; ++i)
             for(int j = 0; j < 8; ++j)
                 buf[i*8+j] = (int)pow(sqrt(8-i)*2 + (sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2);
+    }
     else
+    {
         // For black pieces
         for(int i = 0; i < 8; ++i)
             for(int j = 0; j < 8; ++j)
                 buf[63 - (i*8+j)] = (int)pow(sqrt(8-i)*2 + (sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2);
+    }
 }
 
-/**
- * @brief Generates a map with each bit corresponding to a square's color on a chessboard. If a bit is set to 0 then it is white, if 1 then black.
- * 
- * @param buf 
- */
 bitboard generate_board_color_map()
 {
     bitboard map = 0b1111111111111111111111111111111111111111111111111111111111111111ULL; // ._.
@@ -82,13 +58,6 @@ bitboard generate_board_color_map()
 
 namespace eval
 {
-/**
- * @brief Evaluates material
- * 
- * @param pos 
- * @param piece_color 
- * @return int 
- */
 int eval_material(struct board::position pos)
 {
     int evaluation = 0;
@@ -159,13 +128,6 @@ int eval_material(struct board::position pos)
 // Evaluation functions for the middlegame phase
 namespace middlegame
 {
-/**
- * @brief Returns an evaluation based on the squares which the pieces of a single color control. Quantity of squares as well as their importance is evaluated. Only works when board_control_value_map_w and board_control_value_map_b have been initialized.
- * 
- * @param pos 
- * @param piece_color 
- * @return float 
- */
 int eval_board_control(struct board::position pos, bool piece_color)
 {
     int eval = 0;
@@ -182,12 +144,6 @@ int eval_board_control(struct board::position pos, bool piece_color)
 }
 } // namespace middlegame
 
-/**
- * @brief Produces an overall evaluation of a position
- * 
- * @param pos 
- * @return evaluation
- */
 int eval_position(struct board::position pos)
 {
     int evaluation = 0;

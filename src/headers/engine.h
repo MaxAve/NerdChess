@@ -1,3 +1,6 @@
+#ifndef ENGINE_H
+#define ENGINE_H
+
 #include <iostream>
 #include <algorithm>
 #include <fstream>
@@ -17,3 +20,5 @@ struct engine_eval
 struct engine_eval minimax(struct board::position pos, bool maximizing, int alpha, int beta, uint8_t depth);
 } // namespace engine
 } // namespace NerdChess
+
+#endif

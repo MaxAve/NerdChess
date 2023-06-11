@@ -1,19 +1,12 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "engine.h"
+#include "headers/engine.h"
 
 namespace NerdChess
 {
 namespace engine
 {
-/**
- * @brief Minimax function
- * 
- * @param maximizing 
- * @param depth 
- * @return struct engine_eval 
- */
 struct engine_eval minimax(struct board::position pos, bool maximizing, int alpha, int beta, uint8_t depth)
 {
     int evaluation = 0;
