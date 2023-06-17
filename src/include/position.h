@@ -5,26 +5,26 @@
 #include <vector>
 #include "bitboard.h"
 
-using namespace NerdChess::bitb;
-
-#define EMPTY -2147483648
+#define GET_FILE(x) (x % 8)
+#define GET_RANK(x) ((x - (x % 8)) / 8)
+#define NEAR_CENTER(x) (x > 15 && x < 48 && (x % 8) > 1 && (x % 8) < 6)
+#define IN_CENTER(x) (x > 23 && x < 40 && (x % 8) > 2 && (x % 8) < 5)
+#define EMPTY INT_MIN
 #define PAWN 0
 #define KNIGHT 1
 #define BISHOP 2
 #define ROOK 3
 #define QUEEN 4
 #define KING 5
-#define _BLACK 6 // In the position struct black pieces are represented by the last 6 bitboards, adding 6 to a piece index gives you the black version of the piece
-
+#define _BLACK 6
 #define WHITE 0
 #define BLACK 1
 
-namespace NerdChess
-{
-namespace board
-{
-struct position
-{
+using namespace NerdChess::bitb;
+
+namespace NerdChess {
+namespace board {
+struct position {
 	bitb::bitboard pieces[12];	
 	bool castling_rights[2];
 	int en_pessant_squares[2];
@@ -48,8 +48,7 @@ inline struct position get_empty_position() { return (struct position){{0ULL, 0U
 void print_board(struct position board, int sp, int ss);
 std::string board_to_str(NerdChess::board::position board);
 
-namespace debug
-{
+namespace debug {
 void print_vec(std::vector<int> vec);
 void print_board(struct position board);
 } // namespace debug

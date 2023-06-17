@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#define SQUARE(x)((x)*(x))
+
 namespace NerdChess
 {
 namespace bitb

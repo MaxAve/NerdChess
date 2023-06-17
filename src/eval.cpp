@@ -1,6 +1,6 @@
 #include <iostream>
 #include <math.h>
-#include "headers/eval.h"
+#include "include/eval.h"
 
 int NerdChess::board_control_value_map_w[64] = {0};
 int NerdChess::board_control_value_map_b[64] = {0};
@@ -46,7 +46,7 @@ void NerdChess::generate_square_safety_map(int* buf, bool piece_color) {
 }
 
 NerdChess::bitb::bitboard NerdChess::generate_board_color_map() {
-    NerdChess::bitb::bitboard map = 0b1111111111111111111111111111111111111111111111111111111111111111ULL; // ._.
+    NerdChess::bitb::bitboard map = 0xffffffffffffffff;
     for(int i = 0; i < 8; ++i) {
         for(int j = 0; j < 8; ++j) {
             if((i+1*8+j) % 2 == 0) {
@@ -59,7 +59,7 @@ NerdChess::bitb::bitboard NerdChess::generate_board_color_map() {
 
 int NerdChess::eval::eval_material(struct NerdChess::board::position pos, int piece_map[]) {
     int eval = 0;
-    NerdChess::bitb::bitboard _piece_map = board::map_pieces(pos);
+    const NerdChess::bitb::bitboard _piece_map = board::map_pieces(pos);
     const int piece_values[] = {PAWN_VALUE, KNIGHT_VALUE, BISHOP_VALUE, ROOK_VALUE, QUEEN_VALUE, 1000000000, -PAWN_VALUE, -KNIGHT_VALUE, -BISHOP_VALUE, -ROOK_VALUE, -QUEEN_VALUE, -1000000000};
     for(int i = 0; i < 64; ++i) {
         if(NerdChess::bitb::get_bit(_piece_map, i)) {
@@ -79,51 +79,55 @@ int NerdChess::eval::eval_structure(struct NerdChess::board::position board, int
 
             case PAWN: {
                 // Pawns in the center
-                if(IS_NEAR_CENTER(i)) {
-                    eval += 7;
-                    if(IS_IN_CENTER(i)) {
+                if(NEAR_CENTER(i)) {
+                    eval += 10;
+                    if(IN_CENTER(i))
                         eval += 10;
-                    }
                 }
+				// Pawns in the enemy territory
+				if(GET_RANK(i) > 3)
+					eval += 8;
                 break;
             }
 
             case PAWN+_BLACK: {
                 // Pawns in the center
-                if(IS_NEAR_CENTER(i)) {
-                    eval -= 7;
-                    if(IS_IN_CENTER(i)) {
+                if(NEAR_CENTER(i)) {
+                    eval -= 10;
+                    if(IN_CENTER(i))
                         eval -= 10;
-                    }
                 }
+				// Pawns in the enemy territory
+				if(GET_RANK(i) > 3)
+					eval += 8;
                 break;
             }
 
             case KNIGHT: {
                 // Knights should be placed in or near the center
-                if(IS_NEAR_CENTER(i))
-                    eval += 18;
+                if(NEAR_CENTER(i))
+                    eval += 15;
                 break;
             }
 
             case KNIGHT+_BLACK: {
                 // Knights should be placed in or near the center
-                if(IS_NEAR_CENTER(i))
-                    eval -= 18;
+                if(NEAR_CENTER(i))
+                    eval -= 15;
                 break;
             }
 
             case QUEEN: {
                 // Queens should not be in the center
-                if(IS_NEAR_CENTER(i))
-                    eval -= 10;
+                if(NEAR_CENTER(i))
+                    eval -= 13;
                 break;
             }
 
             case QUEEN+_BLACK: {
                 // Queens should not be in the center
-                if(IS_NEAR_CENTER(i))
-                    eval += 10;
+                if(NEAR_CENTER(i))
+                    eval += 13;
                 break;
             }
         }
@@ -134,15 +138,11 @@ int NerdChess::eval::eval_structure(struct NerdChess::board::position board, int
 
 int NerdChess::eval::middlegame::eval_board_control(struct NerdChess::board::position pos, bool piece_color) {
     int eval = 0;
-    int* value_map;
-    if(piece_color)
-        value_map = board_control_value_map_b;
-    else
-        value_map = board_control_value_map_w;
-    NerdChess::bitb::bitboard control_map = board::get_control_map(pos, piece_color);
+    const int* value_map = piece_color ? board_control_value_map_b : board_control_value_map_w;
+    const NerdChess::bitb::bitboard control_map = board::get_control_map(pos, piece_color);
     for(int i = 0; i < 64; ++i)
         if(get_bit(control_map, i) == 1)
-            eval += value_map[i] / 10; // Increases the evaluation based on the value of the squares controlled
+            eval += value_map[i] / 5; // Increases the evaluation based on the value of the squares controlled
     return eval;
 }
 

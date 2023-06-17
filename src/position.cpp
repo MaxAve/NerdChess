@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include "headers/position.h"
+#include "include/position.h"
 
 using namespace NerdChess::bitb;
 
@@ -547,12 +547,13 @@ std::vector<int> NerdChess::board::get_moves(struct position pos, uint8_t piece_
 		if(!control) {
 			// Control map for enemy pieces
 			// Used to map squares the king CANNOT move to
-			NerdChess::bitb::bitboard control_map = get_control_map(pos, opposite_piece_color);
+			const NerdChess::bitb::bitboard control_map = get_control_map(pos, opposite_piece_color);
 
 			// Loops in a way that creates a 3x3 area around the piece_location (ignores piece_locations itself since the king can't control it's own square)
 			for(int i = piece_location - 9; i < piece_location + 9; i += 8)
 				for(int j = 0; j < 3; ++j)
-					if(NerdChess::bitb::get_bit(control_map, i+j) == 0 && i+j != piece_location && i+j >= 0 && i+j < 64)
+					if(i+j != piece_location && i+j >= 0 && i+j < 64)
+					//if(NerdChess::bitb::get_bit(control_map, i+j) == 0 && i+j != piece_location && i+j >= 0 && i+j < 64)
 						legal_moves.push_back(i+j);
 		}
 		else

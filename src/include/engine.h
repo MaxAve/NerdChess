@@ -7,12 +7,9 @@
 #include <sstream>
 #include "eval.h"
 
-namespace NerdChess
-{
-namespace engine
-{
-struct engine_eval
-{
+namespace NerdChess {
+namespace engine {
+struct engine_eval {
     int eval; // Position evaluation
     int best_move[2]; // Contains the numbers of the squares from and to which a piece needs to move to
 };

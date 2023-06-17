@@ -4,15 +4,11 @@
 #include <iostream>
 #include "position.h"
 
-#define SQUARE(x)((x)*(x))
-#define IS_NEAR_CENTER(x)(x > 15 && x < 48 && (x % 8) > 1 && (x % 8) < 6)
-#define IS_IN_CENTER(x)(x > 23 && x < 40 && (x % 8) > 2 && (x % 8) < 5)
-
 #define PAWN_VALUE 100
-#define KNIGHT_VALUE 300
-#define BISHOP_VALUE 300
-#define ROOK_VALUE 500
-#define QUEEN_VALUE 900
+#define KNIGHT_VALUE 350
+#define BISHOP_VALUE 350
+#define ROOK_VALUE 600
+#define QUEEN_VALUE 950
 
 namespace NerdChess {
 // Maps to determine which squares are more important to control for each team

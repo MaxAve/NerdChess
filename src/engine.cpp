@@ -1,7 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "headers/engine.h"
+#include "include/engine.h"
 
 struct NerdChess::engine::engine_eval NerdChess::engine::minimax(struct board::position pos, bool maximizing, int alpha, int beta, uint8_t depth) {
     int evaluation = maximizing ? -INT_MAX : INT_MAX;
