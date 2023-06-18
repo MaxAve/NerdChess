@@ -1,5 +1,5 @@
 #include <iostream>
-#include "include/opening.h"
+#include "opening.h"
 
 std::unordered_map<std::string, std::vector<int>> NerdChess::opening::book;
 

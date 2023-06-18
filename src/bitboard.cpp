@@ -1,5 +1,5 @@
 #include <iostream>
-#include "include/bitboard.h"
+#include "bitboard.h"
 
 void NerdChess::bitb::move_bit(bitboard& bb, int from, int to) {
 	clear_bit(bb, from);

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include "include/position.h"
+#include "position.h"
 
 using namespace NerdChess::bitb;
 

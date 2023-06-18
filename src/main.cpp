@@ -1,7 +1,7 @@
 #include <iostream>
 #include <Windows.h>
-#include "include/engine.h"
-#include "include/opening.h"
+#include "engine.h"
+#include "opening.h"
 
 int main() {
 	srand(time(NULL));

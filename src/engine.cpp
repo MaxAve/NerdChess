@@ -1,7 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include "include/engine.h"
+#include "engine.h"
 
 struct NerdChess::engine::engine_eval NerdChess::engine::minimax(struct board::position pos, bool maximizing, int alpha, int beta, uint8_t depth) {
     int evaluation = maximizing ? -INT_MAX : INT_MAX;
@@ -12,8 +12,7 @@ struct NerdChess::engine::engine_eval NerdChess::engine::minimax(struct board::p
         return eval;
     } else {
         for(int i = 0; i < 64; ++i) {
-            // I f*cked up with the values, so !maximizing == WHITE, sorry
-            if(board::piece_color_at(pos, i, !maximizing)) {
+            if(board::piece_color_at(pos, i, !maximizing)) { // I f*cked up with the values, so (WHITE == false), sorry
                 std::vector<int> moves = board::get_moves(pos, i, board::get_piece_type(pos, i), !maximizing, false);
 
                 for(int j = 0; j < moves.size(); ++j) {

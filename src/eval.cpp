@@ -1,6 +1,6 @@
 #include <iostream>
 #include <math.h>
-#include "include/eval.h"
+#include "eval.h"
 
 int NerdChess::board_control_value_map_w[64] = {0};
 int NerdChess::board_control_value_map_b[64] = {0};
