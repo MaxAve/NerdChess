@@ -7,7 +7,7 @@ is currently a work-in-progress, and many features are still missing.
 2. You will see a tiny grid with letters pop up, that is the board. Different letters represent different pieces: p = pawn, N = knight, B = bishop, R = rook, Q = queen, K = king.
 3. You will see a small yellow square, that is the cursor. Move the cursor with your arrow keys and select pieces/squares by pressing SPACE.
 4. Select the piece you want to move and press SPACE, then select the **SQUARE** you want to move to and press SPACE
-5. The engine will then make their own move, when it has moved a piece, the cursor will reappear.
+5. The engine will then make their own move, when it has moved a piece, the cursor will reappear.\
 **ATTENTION!** As of right now, the latest build will only accept input on devices running the **Windows** OS. This will most likely be changed in the future.
 ## Roadmap
 Here is what I plan on adding and what I am currently attempting to implement:
