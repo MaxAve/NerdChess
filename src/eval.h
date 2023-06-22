@@ -5,7 +5,7 @@
 #include "position.h"
 
 #define PAWN_VALUE 100
-#define KNIGHT_VALUE 350
+#define KNIGHT_VALUE 300
 #define BISHOP_VALUE 350
 #define ROOK_VALUE 600
 #define QUEEN_VALUE 950
