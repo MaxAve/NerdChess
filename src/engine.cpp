@@ -6,8 +6,12 @@
 struct NerdChess::engine::engine_eval NerdChess::engine::minimax(struct board::position pos, bool maximizing, int alpha, int beta, uint8_t depth) {
     int evaluation = maximizing ? -INT_MAX : INT_MAX;
     struct NerdChess::engine::engine_eval eval;
+    const int winner = NerdChess::eval::get_winner(pos);
 
-    if(depth == 0) {
+    if(winner != WINNER_NONE) {
+        eval.eval = winner * INT_MAX;
+        return eval;
+    } else if(depth == 0) {
         eval.eval = eval::eval_position(pos);
         return eval;
     } else {

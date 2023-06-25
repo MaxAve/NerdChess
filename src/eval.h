@@ -10,21 +10,18 @@
 #define ROOK_VALUE 600
 #define QUEEN_VALUE 950
 
+#define WINNER_WHITE 1
+#define WINNER_BLACK -1
+#define WINNER_NONE 0
+
 namespace NerdChess {
 // Maps to determine which squares are more important to control for each team
 extern int board_control_value_map_w[64];
 extern int board_control_value_map_b[64];
-// Maps to determine which squares are safest for the kings
-extern int square_safety_map_w[64];
-extern int square_safety_map_b[64];
-
-// Map for square colors on a board
-extern bitb::bitboard board_color_map;
 
 void generate_board_control_value_map(int* buf, bool piece_color);
-void generate_square_safety_map(int* buf, bool piece_color);
-bitb::bitboard generate_board_color_map();
 namespace eval {
+int get_winner(struct board::position pos);
 int eval_material(struct board::position pos, int piece_map[]);
 int eval_structure(struct NerdChess::board::position board, int piece_map[]);
 namespace middlegame {

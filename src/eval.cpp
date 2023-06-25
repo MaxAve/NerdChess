@@ -4,10 +4,6 @@
 
 int NerdChess::board_control_value_map_w[64] = {0};
 int NerdChess::board_control_value_map_b[64] = {0};
-int NerdChess::square_safety_map_w[64] = {0};
-int NerdChess::square_safety_map_b[64] = {0};
-
-NerdChess::bitb::bitboard NerdChess::board_color_map = 0ULL;
 
 void NerdChess::generate_board_control_value_map(int* buf, bool piece_color) {
     if(!piece_color) {
@@ -27,40 +23,45 @@ void NerdChess::generate_board_control_value_map(int* buf, bool piece_color) {
     }
 }
 
-void NerdChess::generate_square_safety_map(int* buf, bool piece_color) {
-    if(piece_color) {
-        // For white pieces
-        for(int i = 0; i < 8; ++i) {
-            for(int j = 0; j < 8; ++j) {
-                buf[i*8+j] = (int)pow(sqrt(8-i)*2 + (sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2);
-            }
-        }
-    } else {
-        // For black pieces
-        for(int i = 0; i < 8; ++i) {
-            for(int j = 0; j < 8; ++j) {
-                buf[63 - (i*8+j)] = (int)pow(sqrt(8-i)*2 + (sqrt(pow(j - 3.5, 2) + pow(i - 3, 2))), 2);
-            }
-        }
-    }
-}
+int NerdChess::eval::get_winner(struct board::position pos) {
+    const int wKLocation = NerdChess::board::find_piece(pos.pieces[KING]);
+    const int bKLocation = NerdChess::board::find_piece(pos.pieces[KING+_BLACK]);
+    const bitboard wControlMap = NerdChess::board::get_control_map(pos, WHITE);
+    const bitboard bControlMap = NerdChess::board::get_control_map(pos, BLACK);
 
-NerdChess::bitb::bitboard NerdChess::generate_board_color_map() {
-    NerdChess::bitb::bitboard map = 0xffffffffffffffff;
-    for(int i = 0; i < 8; ++i) {
-        for(int j = 0; j < 8; ++j) {
-            if((i+1*8+j) % 2 == 0) {
-                clear_bit(map, i*8+j);
-            }
-        }
+    if(wKLocation == -1) {
+        return WINNER_BLACK;
+    } else if(bKLocation == -1) {
+        return WINNER_WHITE;
     }
-    return map;
+
+    if(NerdChess::bitb::get_bit(bControlMap, wKLocation) && NerdChess::board::get_moves(pos, wKLocation, KING, WHITE, false).size() == 0) {
+        return WINNER_BLACK;
+    } else if(NerdChess::bitb::get_bit(wControlMap, bKLocation) && NerdChess::board::get_moves(pos, bKLocation, KING, BLACK, false).size() == 0) {
+        return WINNER_WHITE;
+    }
+
+    return WINNER_NONE;
 }
 
 int NerdChess::eval::eval_material(struct NerdChess::board::position pos, int piece_map[]) {
     int eval = 0;
     const NerdChess::bitb::bitboard _piece_map = board::map_pieces(pos);
-    const int piece_values[] = {PAWN_VALUE, KNIGHT_VALUE, BISHOP_VALUE, ROOK_VALUE, QUEEN_VALUE, 1000000000, -PAWN_VALUE, -KNIGHT_VALUE, -BISHOP_VALUE, -ROOK_VALUE, -QUEEN_VALUE, -1000000000};
+    const int piece_values[] = {
+        PAWN_VALUE,
+        KNIGHT_VALUE,
+        BISHOP_VALUE,
+        ROOK_VALUE,
+        QUEEN_VALUE,
+        1000000000,
+        -PAWN_VALUE,
+        -KNIGHT_VALUE,
+        -BISHOP_VALUE,
+        -ROOK_VALUE,
+        -QUEEN_VALUE,
+        -1000000000
+    };
+
     for(int i = 0; i < 64; ++i) {
         if(NerdChess::bitb::get_bit(_piece_map, i)) {
             eval += piece_values[piece_map[i]];
@@ -128,6 +129,20 @@ int NerdChess::eval::eval_structure(struct NerdChess::board::position board, int
                 // Queens should not be in the center
                 if(NEAR_CENTER(i))
                     eval += 13;
+                break;
+            }
+
+            case KING: {
+                // King safely in the corner
+                if(i == 56 || i == 57 || i == 63 || i == 62)
+                    eval += 20;
+                break;
+            }
+
+            case KING+_BLACK: {
+                // King safely in the corner
+                if(i == 0 || i == 1 || i == 6 || i == 7)
+                    eval -= 20;
                 break;
             }
         }

@@ -3,15 +3,22 @@
 #include "engine.h"
 #include "opening.h"
 
-int main() {
+#define SQUARE_SIZE 110
+
+void GetDesktopResolution(int& horizontal, int& vertical) {
+	RECT desktop;
+	const HWND hDesktop = GetDesktopWindow();
+	GetWindowRect(hDesktop, &desktop);
+	horizontal = desktop.right;
+	vertical = desktop.bottom;
+}
+
+int main(int argc, char* argv[]) {
 	srand(time(NULL));
 
 	// Initialization
 	NerdChess::generate_board_control_value_map(NerdChess::board_control_value_map_w, WHITE);
 	NerdChess::generate_board_control_value_map(NerdChess::board_control_value_map_b, BLACK);
-	NerdChess::generate_square_safety_map(NerdChess::square_safety_map_w, WHITE); // ?
-	NerdChess::generate_square_safety_map(NerdChess::square_safety_map_b, BLACK); // ?
-	NerdChess::board_color_map = NerdChess::generate_board_color_map();
 	NerdChess::opening::init_opening_book();
 
 	// Initialize board
@@ -19,45 +26,45 @@ int main() {
 	NerdChess::board::setup_position(board);
 
 	// Cursor
-	int selected_piece = 63;
-	int selected_square = 63;
+	int selectedPiece = 0;
+	int selectedSquare = 0;
 
 	// Game
 	while(1) {
 		// PLayer turn
 		system("cls");
-		NerdChess::board::print_board(board, -1, selected_square);
+		NerdChess::board::print_board(board, -1, selectedSquare);
 
 		// Select piece
 		while(1) {
 			if(GetKeyState(VK_UP) & 0x8000) {
-				selected_piece -= 8;
+				selectedPiece -= 8;
 				system("cls");
-				NerdChess::board::print_board(board, selected_piece, -1);
+				NerdChess::board::print_board(board, selectedPiece, -1);
 			}
 
 			if(GetKeyState(VK_DOWN) & 0x8000) {
-				selected_piece += 8;
+				selectedPiece += 8;
 				system("cls");
-				NerdChess::board::print_board(board, selected_piece, -1);
+				NerdChess::board::print_board(board, selectedPiece, -1);
 			}
 
 			if(GetKeyState(VK_LEFT) & 0x8000) {
-				selected_piece--;
+				selectedPiece--;
 				system("cls");
-				NerdChess::board::print_board(board, selected_piece, -1);
+				NerdChess::board::print_board(board, selectedPiece, -1);
 			}
 
 			if(GetKeyState(VK_RIGHT) & 0x8000) {
-				selected_piece++;
+				selectedPiece++;
 				system("cls");
-				NerdChess::board::print_board(board, selected_piece, -1);
+				NerdChess::board::print_board(board, selectedPiece, -1);
 			}
 
 			if(GetKeyState(VK_SPACE) & 0x8000) {
 				system("cls");
-				NerdChess::board::print_board(board, selected_piece, -1);
-				selected_square = selected_piece;
+				NerdChess::board::print_board(board, selectedPiece, -1);
+				selectedSquare = selectedPiece;
 				break;
 			}
 
@@ -70,39 +77,39 @@ int main() {
 		while(1)
 		{
 			if(GetKeyState(VK_UP) & 0x8000) {
-				selected_square -= 8;
+				selectedSquare -= 8;
 				system("cls");
-				NerdChess::board::print_board(board, -1, selected_square);
+				NerdChess::board::print_board(board, -1, selectedSquare);
 			}
 
 			if(GetKeyState(VK_DOWN) & 0x8000) {
-				selected_square += 8;
+				selectedSquare += 8;
 				system("cls");
-				NerdChess::board::print_board(board, -1, selected_square);
+				NerdChess::board::print_board(board, -1, selectedSquare);
 			}
 
 			if(GetKeyState(VK_LEFT) & 0x8000) {
-				selected_square--;
+				selectedSquare--;
 				system("cls");
-				NerdChess::board::print_board(board, -1, selected_square);
+				NerdChess::board::print_board(board, -1, selectedSquare);
 			}
 
 			if(GetKeyState(VK_RIGHT) & 0x8000) {
-				selected_square++;
+				selectedSquare++;
 				system("cls");
-				NerdChess::board::print_board(board, -1, selected_square);
+				NerdChess::board::print_board(board, -1, selectedSquare);
 			}
 
 			if(GetKeyState(VK_SPACE) & 0x8000) {
 				system("cls");
-				NerdChess::board::print_board(board, -1, selected_square);
+				NerdChess::board::print_board(board, -1, selectedSquare);
 				break;
 			}
 
 			Sleep(80);
 		}
 
-		NerdChess::board::move_piece(board, selected_piece, selected_square);
+		NerdChess::board::move_piece(board, selectedPiece, selectedSquare);
 		system("cls");
 		NerdChess::board::debug::print_board(board);
 
@@ -121,5 +128,5 @@ int main() {
 		}
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }

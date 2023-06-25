@@ -50,18 +50,20 @@ void NerdChess::board::move_piece(struct position& board, int from, int to) {
 	int piece = get_full_piece_type(board, from);
 	remove_piece(board, to);
 	NerdChess::bitb::move_bit(board.pieces[piece], from, to);
+
 	// Special pawn moves
 	if(piece == PAWN) {
 		// White pawn
 
 		if((from - to) == 16)
 			board.en_pessant_squares[BLACK] = to + 8;
-		// En pessant capture
+
+		// En croissant capture
 		if(!piece_color_at(board, to, BLACK))
 			bitb::clear_bit(board.pieces[6], to + 8);
+
 		// Promote to queen
-		if(to < 8)
-		{
+		if(to < 8) {
 			remove_piece(board, to);
 			NerdChess::bitb::set_bit(board.pieces[QUEEN], to);
 		}
@@ -70,14 +72,46 @@ void NerdChess::board::move_piece(struct position& board, int from, int to) {
 
 		if((to - from) == 16)
 			board.en_pessant_squares[WHITE] = to - 8;
-		// En croissant capture
+
+		// En pessant capture
 		if(!piece_color_at(board, to, WHITE))
 			NerdChess::bitb::clear_bit(board.pieces[PAWN], to - 8);
+
 		// Promote to queen
 		if(to > 55) {
 			remove_piece(board, to);
 			NerdChess::bitb::set_bit(board.pieces[QUEEN+6], to);
 		}
+	}
+
+	// Castling
+	if(piece == KING || piece == KING+_BLACK) {
+		// King-side castle
+		if(to-from==2) {
+			NerdChess::bitb::clear_bit(board.pieces[ROOK], 63);
+			NerdChess::bitb::set_bit(board.pieces[ROOK], to-1);
+		}
+
+		// Queen-side castle
+		if(from-to==2) {
+			NerdChess::bitb::clear_bit(board.pieces[ROOK], 56);
+			NerdChess::bitb::set_bit(board.pieces[ROOK], to+1);
+		}
+
+		board.castling_rights[!(piece-6 < 0)][0] = false;
+		board.castling_rights[!(piece-6 < 0)][1] = false;
+	}
+
+	if(piece == ROOK) {
+		if(from == 63)
+			board.castling_rights[WHITE][0] = false;
+		if(from == 56)
+			board.castling_rights[WHITE][1] = false;
+	} else if(piece == ROOK+_BLACK) {
+		if(from == 7)
+			board.castling_rights[WHITE][0] = false;
+		if(from == 0)
+			board.castling_rights[WHITE][1] = false;
 	}
 }
 
@@ -90,10 +124,10 @@ NerdChess::bitb::bitboard NerdChess::board::map_bitboard(std::vector<int> vec) {
 
 NerdChess::bitb::bitboard NerdChess::board::get_control_map(struct position board, bool piece_color) {
 	NerdChess::bitb::bitboard map = 0ULL;
-	for(int i = 0; i < 64; i++)
-	{
-		int piece = get_piece_type(board, i);
-		if(piece != EMPTY)
+	int piece;
+	for(int i = 0; i < 64; ++i) {
+		piece = get_piece_type(board, i);
+		if(piece != EMPTY && !((get_full_piece_type(board, i) - 6) < 0) == piece_color)
 			map |= map_bitboard(get_moves(board, i, piece, piece_color, true));
 	}
 	return map;
@@ -103,6 +137,18 @@ NerdChess::bitb::bitboard NerdChess::board::map_pieces(struct NerdChess::board::
 	NerdChess::bitb::bitboard map = 0ULL;
 	for(int i = 0; i < 12; ++i)
 		map |= board.pieces[i];
+	return map;
+}
+
+NerdChess::bitb::bitboard NerdChess::board::map_pieces(struct NerdChess::board::position board, bool pieceColor) {
+	NerdChess::bitb::bitboard map = 0ULL;
+	if(pieceColor) {
+		for(int i = 6; i < 12; ++i)
+			map |= board.pieces[i];
+	} else {
+		for(int i = 0; i < 6; ++i)
+			map |= board.pieces[i];
+	}
 	return map;
 }
 
@@ -545,36 +591,59 @@ std::vector<int> NerdChess::board::get_moves(struct position pos, uint8_t piece_
 
 		case KING:
 		if(!control) {
-			// Control map for enemy pieces
-			// Used to map squares the king CANNOT move to
-			const NerdChess::bitb::bitboard control_map = get_control_map(pos, opposite_piece_color);
+			const NerdChess::bitb::bitboard enemyControlMap = NerdChess::board::get_control_map(pos, opposite_piece_color);
+			const NerdChess::bitb::bitboard illegalSquares = enemyControlMap | NerdChess::board::map_pieces(pos, piece_color);
+			const NerdChess::bitb::bitboard blockedCastleSquaresMap = piece_map | enemyControlMap;
 
 			// Loops in a way that creates a 3x3 area around the piece_location (ignores piece_locations itself since the king can't control it's own square)
-			for(int i = piece_location - 9; i < piece_location + 9; i += 8)
-				for(int j = 0; j < 3; ++j)
-					if(i+j != piece_location && i+j >= 0 && i+j < 64)
-					//if(NerdChess::bitb::get_bit(control_map, i+j) == 0 && i+j != piece_location && i+j >= 0 && i+j < 64)
-						legal_moves.push_back(i+j);
-		}
-		else
+			for(int i = piece_location - 9; i < piece_location + 9; i += 8) {
+				for(int j = 0; j < 3; ++j) {
+					if(i+j != piece_location && i+j >= 0 && i+j < 64) {
+						if(!NerdChess::bitb::get_bit(illegalSquares, i+j)) {
+							legal_moves.push_back(i+j);
+						}
+					}
+				}
+			}
+
+			// Castling
+			if(pos.castling_rights[piece_color][0]) {
+				// King-side castle
+				if(!(bitb::get_bit(blockedCastleSquaresMap, piece_location+1) | bitb::get_bit(blockedCastleSquaresMap, piece_location+2))) {
+					legal_moves.push_back(piece_location + 2);
+				}
+			}
+			if(pos.castling_rights[piece_color][1]) {
+				// Queen-side castle
+				if(!(bitb::get_bit(blockedCastleSquaresMap, piece_location-1) | bitb::get_bit(blockedCastleSquaresMap, piece_location-2) | bitb::get_bit(blockedCastleSquaresMap, piece_location-3))) {
+					legal_moves.push_back(piece_location - 2);
+				}
+			}
+		} else {
 			// Loops in a way that creates a 3x3 area around the piece_location (ignores piece_locations itself since the king can't control it's own square)
-			for(int i = piece_location - 9; i < piece_location + 9; i += 8)
-				for(int j = 0; j < 3; ++j)
-					if(i+j != piece_location && i+j >= 0 && i+j < 64)
+			for(int i = piece_location - 9; i < piece_location + 9; i += 8) {
+				for(int j = 0; j < 3; ++j) {
+					if(i+j != piece_location && i+j >= 0 && i+j < 64) {
 						legal_moves.push_back(i+j);
+					}
+				}
+			}
+		}
 		break;
 
 		// Default (invalid argument)
 		default:
-		std::cerr << "Invalid piece type \"" << piece_type << "\"";
+		std::cerr << "Invalid piece type \"" << std::to_string(piece_type) << "\"";
 		break;
 	}
 	return legal_moves;
 }
 
 void NerdChess::board::setup_position(struct position& board) {
-	board.castling_rights[WHITE] = true;
-	board.castling_rights[BLACK] = true;
+	board.castling_rights[WHITE][0] = true;
+	board.castling_rights[WHITE][1] = true;
+	board.castling_rights[BLACK][0] = true;
+	board.castling_rights[BLACK][1] = true;
 	board.en_pessant_squares[WHITE] = INT_MIN;
 	board.en_pessant_squares[BLACK] = INT_MIN;
 

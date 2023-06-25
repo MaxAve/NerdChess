@@ -26,7 +26,7 @@ namespace NerdChess {
 namespace board {
 struct position {
 	bitb::bitboard pieces[12];	
-	bool castling_rights[2];
+	bool castling_rights[2][2];
 	int en_pessant_squares[2];
 };
 
@@ -39,6 +39,7 @@ void move_piece(struct position& board, int from, int to);
 bitb::bitboard map_bitboard(std::vector<int> vec);
 bitb::bitboard get_control_map(struct position board, bool piece_color);
 bitb::bitboard map_pieces(struct position board);
+bitb::bitboard map_pieces(struct position board, bool pieceColor);
 int count_bits(bitb::bitboard bb);
 int count_pieces(struct position board);
 std::vector<int> get_moves(struct position pos, uint8_t piece_location, uint8_t piece_type, bool piece_color, bool control);
