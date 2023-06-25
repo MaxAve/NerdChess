@@ -9,7 +9,7 @@ struct NerdChess::engine::engine_eval NerdChess::engine::minimax(struct board::p
     const int winner = NerdChess::eval::get_winner(pos);
 
     if(winner != WINNER_NONE) {
-        eval.eval = winner * INT_MAX;
+        eval.eval = winner * (INT_MAX-1);
         return eval;
     } else if(depth == 0) {
         eval.eval = eval::eval_position(pos);

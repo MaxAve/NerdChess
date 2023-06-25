@@ -24,23 +24,10 @@ void NerdChess::generate_board_control_value_map(int* buf, bool piece_color) {
 }
 
 int NerdChess::eval::get_winner(struct board::position pos) {
-    const int wKLocation = NerdChess::board::find_piece(pos.pieces[KING]);
-    const int bKLocation = NerdChess::board::find_piece(pos.pieces[KING+_BLACK]);
-    const bitboard wControlMap = NerdChess::board::get_control_map(pos, WHITE);
-    const bitboard bControlMap = NerdChess::board::get_control_map(pos, BLACK);
-
-    if(wKLocation == -1) {
+    if(NerdChess::board::find_piece(pos.pieces[KING]) == -1)
         return WINNER_BLACK;
-    } else if(bKLocation == -1) {
+    if(NerdChess::board::find_piece(pos.pieces[KING+_BLACK]) == -1)
         return WINNER_WHITE;
-    }
-
-    if(NerdChess::bitb::get_bit(bControlMap, wKLocation) && NerdChess::board::get_moves(pos, wKLocation, KING, WHITE, false).size() == 0) {
-        return WINNER_BLACK;
-    } else if(NerdChess::bitb::get_bit(wControlMap, bKLocation) && NerdChess::board::get_moves(pos, bKLocation, KING, BLACK, false).size() == 0) {
-        return WINNER_WHITE;
-    }
-
     return WINNER_NONE;
 }
 
